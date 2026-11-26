@@ -1,0 +1,7 @@
+.lake/
+__pycache__/
+*.py[cod]
+.venv/
+.DS_Store
+layer-rates/paired-*-rerun.csv
+paper/.typeset-*/

@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "Please cite the manuscript when referring to the result or its Lean formalization."
+title: "Steering a network’s inductive bias with the hidden-layer learning rate"
+authors:
+  - given-names: Zach
+    family-names: Conn
+repository-code: "https://github.com/zpconn/layer-rate-bias"
+preferred-citation:
+  type: unpublished
+  title: "Steering a network’s inductive bias with the hidden-layer learning rate"
+  authors:
+    - given-names: Zach
+      family-names: Conn
+  year: 2026
+  notes: "Zach Conn, investigator. OpenAI Codex and Anthropic Claude, research agents."
+  url: "https://github.com/zpconn/layer-rate-bias/blob/main/paper/paper.pdf"

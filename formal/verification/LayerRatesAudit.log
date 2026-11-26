@@ -1,0 +1,5 @@
+'CircleLayerRates.reference_difference' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleLayerRates.coefficient_limit' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleLayerRates.transfer_bound' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleLayerRates.paired_limit' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleLayerRates.sign_error_mass' depends on axioms: [propext, Classical.choice, Quot.sound]

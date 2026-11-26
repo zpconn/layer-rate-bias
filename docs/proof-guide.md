@@ -1,0 +1,64 @@
+# A guide to the Lean proofs
+
+Both the discrete and continuous training theorems are formalized entirely in Lean. This guide follows the proof from the shared Gaussian initialization to the final difference in population means and identifies the declarations establishing each step. [Paper](../paper/paper.pdf) · [Main Lean declarations](../formal/) · [Replay instructions](#reproduce-the-verification)
+
+## The two runs and what they measure
+
+Place an odd number $N\ge3$ of training inputs at equally spaced angles $u$ on the unit circle. The input at $u$ is the vector $(\cos u,\sin u)$. The target output at angle $u$ is $1+\cos u$. Its average on the grid and its average over all angles are both one. Write $Q_N f$ for a prediction function $f$ averaged on the grid, and $Qf$ for its average when the angle is uniform over the circle. The latter is its **population mean**. In the Lean source, the grid size is written `n+1`.
+
+The network has $m=N^{32}$ hidden units. Each takes the dot product of its two weights with the input and keeps the positive part, an operation called ReLU. A second set of weights, the **readout**, multiplies these hidden outputs and sums them with a factor of $1/\sqrt m$. The complete draw of independent standard Gaussian weights is a **seed**. Two runs share this draw and hence the same initial prediction function $f_0$. Define the **initial deficit** $X=1-Q_N f_0$.
+
+The training loss is half the average squared difference between predictions and targets on the grid. Its gradient is the vector of derivatives with respect to the weights. In full-batch **gradient descent** (GD), both layers simultaneously subtract their gradients computed on the whole grid at the current weights, multiplied by the layer rates. The readout step is one, and the hidden step $\tau$ is $1/2$ or $2$. GD uses derivative zero where ReLU has a corner. In **gradient flow**, the layer rates multiply a continuous negative-gradient velocity. At a corner of the loss, the proof allows velocities in the convex hull of limiting negative gradients, weighted by the layer rates. It constructs a path measurable in the seed so that probabilities of outcomes are defined. The flow theorem covers every admissible pair with measurable endpoints. [Discrete update](../formal/CircleWeightedStep.lean) · [Construction of flow paths](../formal/CircleFlowConstruction.lean#L75)
+
+Set $H=\lceil2\pi^2N^2\log(2\sqrt{12}\,N^{7/2})\rceil$, where $\log$ is the natural logarithm. Take $H$ steps for GD or train until time $H$ for flow. Write $Y_\tau$ for the population mean at this endpoint and $D=N^2(Y_{1/2}-Y_2)$ for the scaled difference. The root mean square (RMS) of a list of errors is the square root of their mean square. A run **fits** if its RMS prediction error on the grid is at most $N^{-3}$. For a random quantity $U$ determined by the seed, $\|U\|_{L^2}$ takes the RMS over seeds. A wrong predicted ordering means $DX\le0$, so a tie counts as a miss. [Training horizon](../formal/CircleFlowTracking.lean#L347)
+
+## How the coefficient enters the proof
+
+Take the gradients of predictions with respect to the network weights at initialization. Their pairwise inner products, weighted by the layer rates, describe how training on one input initially changes the prediction at another. Averaging these inner products over seeds gives a deterministic **tangent kernel**. Holding it fixed gives a linear training problem starting from each seed’s actual $f_0$. Write $b_{\tau,N}$ for the fraction of the initial grid deficit transferred to the population mean when this linear problem exactly matches the training labels. The resulting population mean is the **reference** $Z_\tau=Qf_0+b_{\tau,N}X$. Define the finite-grid coefficient $c_N=N^2(b_{1/2,N}-b_{2,N})$. [Reference and kernel](../formal/CircleKernelIdentification.lean) · [Paired coefficient](../formal/CirclePairedOrdering.lean#L37)
+
+Below, $O(N^{-p})$ denotes a bound by a constant times $N^{-p}$ for sufficiently large odd $N$.
+
+The common initial population mean cancels on subtraction. The scaled difference of the references is exactly $c_NX$, with $c_N>0$ and $c_N\to\pi^2/40$. Consequently $X>0$ predicts a higher trained mean for the slower hidden layer, and $X<0$ predicts the reverse. The next estimates quantify how accurately the reference difference predicts the actual trained difference. [Reference cancellation](../formal/CirclePairedOrdering.lean#L57) · [Coefficient limit](../formal/CircleFiniteCoefficient.lean)
+
+## Discrete gradient descent
+
+| Step | What Lean proves |
+| --- | --- |
+| Track both actual updates | The reference update contracts the grid residual, the vector of prediction errors at the training inputs, for each hidden rate at readout step one. Bounds on the initial gradients and weight movement control the nonlinear update error through $H$. For sufficiently large odd $N$, a single set of probability at least $1-2/\sqrt N$ gives both fits and $\lvert D-c_NX\rvert\le10N^{-33/32}$. |
+| Transfer the sign and coefficient | A wrong sign on that set requires $\lvert X\rvert\le10N^{-33/32}/c_N$. The Gaussian law bounds the probability of such a small deficit. The overall miss probability is $O(N^{-1/2})$. For each fixed $\varepsilon>0$, the probability that $\lvert D-(\pi^2/40)X\rvert\ge\varepsilon$ tends to zero. |
+| Control squared error over all seeds | There are Gaussian initializations on which the magnitudes of the two learners’ outputs separate exceptionally fast. A lower bound on their probability and a lower bound on their separation imply that the expected square of $Y_{1/2}-Y_2-d_N X/N^2$ tends to infinity, even for $d_N=c_N$ or $d_N=\pi^2/40$. |
+
+The spectral estimate bounds how much one reference update can change the grid residual. The trajectory theorem extends the bound to the actual updates, and the horizon estimate gives the common fitting event. The ordering and limiting prediction theorems both use this event. [Unit-step spectrum](../formal/CirclePositiveSpectrum.lean) · [Nonlinear trajectory](../formal/CircleWeightedDynamics.lean) · [Joint event](../formal/CirclePairedGDTypical.lean) · [Discrete theorem](../formal/CirclePairedGDTheorem.lean#L59)
+
+The divergence proof follows a symmetric initialization at which all neurons have the same readout and horizontal hidden weight. It shows how a full box of nearby seeds follows these two trajectories, bounds the Gaussian probability of the box, and integrates the output error over it. A finite network after finitely many updates has finite moments of every finite order. [Symmetric trajectories](../formal/CirclePairedGDCenter.lean) · [Nearby seeds](../formal/CirclePairedGDBox.lean) · [Finite moments](../formal/CirclePairedGDIntegrable.lean) · [Mean-square divergence at the specified clock](../formal/CirclePairedGDClocksTail.lean)
+
+## Gradient flow
+
+| Step | What Lean proves |
+| --- | --- |
+| Compare each trained network with its reference | Bounds on fluctuations of the initial prediction gradients and on changes in which units have positive inputs control most seeds. A bound on the expected fourth power of the error controls the contribution from the remaining seeds. The RMS of $Y_\tau-Z_\tau$ over all seeds is $O(N^{-15})$. [Initialization event](../formal/CircleSharpEvent.lean#L81) · [Training on that event](../formal/CircleSharpTracking.lean#L584) · [All-seed bound](../formal/CircleSharpMoments.lean#L159) |
+| Fit both networks on the same seed | For odd $N\ge36865$, `common_event` gives a set of seeds of probability at least $1-96N^{-158}$ on which both networks fit and $D$ is within $O(N^{-13}\log N)$ of $c_N X$. [Joint fit and population response](../formal/CirclePairedTheorem.lean#L41) |
+| Check the size and sign of the difference | Over all seeds the RMS of $D-c_N X$ is $O(N^{-13})$. The probability of an incorrect ordering, counting a tie as a miss, is $O(N^{-13})$. [All-seed bounds](../formal/CirclePairedTheorem.lean#L209) · [Sign-error proof](../formal/CirclePairedOrdering.lean#L573) |
+
+The coefficient has expansion $c_N=\pi^2/40-\pi^4/(1600N^2)+O(N^{-4})$. For the **unscaled** difference $Y_{1/2}-Y_2$, the predicted value $c_N X/N^2$ has RMS error $O(N^{-15})$. Substituting the limiting coefficient $\pi^2/40$ gives RMS error of order $N^{-4}$, with a strictly positive leading constant. [Coefficient expansion](../formal/CirclePairedTheorem.lean#L209) · [Leading RMS error](../formal/CirclePairedSecondOrder.lean#L93)
+
+## Both layer rates equal to one
+
+Write $Y$ for a run’s population mean. Its statistical bias is its expectation over seeds minus the teacher mean of one. Its variance is the expected squared difference from its own expectation. At time $H$, for gradient flow, $N^2$ times the bias and $N^4$ times the variance converge to $-\pi^2/36$ and $7\pi^2/1620$, respectively. Unit-step GD has the same limits after $\lceil\pi^2\log N\rceil$ updates. After $\lceil60\log N\rceil$ updates, and again after $H$ updates, its unscaled variance and its expected squared error relative to $Z_1$ both diverge. Two sets of initial weights give the lower bound. On them, each update reverses the readout signs and increases the weight magnitudes at least cubically in their previous minimum size. [Equal-rate flow](../formal/CircleComparison.lean#L251) · [Early GD](../formal/CircleGDLimits.lean#L108) · [One-step growth](../formal/CircleGridEscape.lean#L60) · [Variance divergence](../formal/CircleEulerLimits.lean#L236) · [Mean-square divergence](../formal/CircleEulerLimits.lean#L306)
+
+At $H$, unit-step GD fits with probability tending to one. The two sets used in the divergence proof miss the tolerance at every update. Whether retaining only successful runs restores the reference’s moment limits is open. One rule tests the network after the final update at $H$. Another returns the first network to reach tolerance by $H$. On the grid, the initial prediction gradients give a matrix of pairwise inner products divided by $N$. For the first-fit rule, Lean reduces the remaining estimate to seeds for which the largest eigenvalue of this matrix exceeds one and the network later fits. [Fitting trajectory](../formal/CircleDiscreteTracking.lean#L354) · [Nonfitting sets](../formal/CircleConditioning.lean#L300) · [First-hit reduction](../formal/CircleConditioning.lean#L731)
+
+## Reproduce the verification
+
+Lean’s **kernel** is the program that checks an encoded proof against the inference rules. The verification receipt records a clean build and both kernel replays. To repeat it, use a shell with Git, Python 3.11 or newer, and elan, the Lean version manager. Lake is Lean’s build tool. The pinned toolchain supplies Lake, the proof exporter `leanexport` and the two replay programs `leanchecker` and `leanchecker-paranoid`. Start at the repository root. On the first run Lake downloads the dependencies and the compiled cache for mathlib, the mathematics library used by the proofs. [Toolchain](../formal/lean-toolchain) · [Dependency revisions](../formal/lake-manifest.json)
+
+```sh
+cd formal
+elan toolchain install leanprover/lean4:v4.35.0
+lake exe cache get
+python3 verify.py --report .lake/replay
+```
+
+For a build alone, run `lake build --wfail` from `formal/` after the cache download. The verifier builds the project’s source files in a fresh temporary directory, treats warnings as errors and runs the project’s audit files. It lists every named Lean object (a **declaration**), including private proofs. A declaration is marked safe when it is available for use in Lean’s trusted logic. The verifier exports each safe declaration together with everything needed to check it, verifies that each theorem has a proof body, and gives the same export to both checkers. A frozen table of numerical runs supplies the input for separate checks of reported counts. The proofs about the training dynamics start from the mathematical network and its update rules. [Verifier](../formal/verify.py) · [Checks on recorded observations](../formal/CirclePairedData.lean#L13)
+
+The receipt records the exact numbers of libraries, safe declarations and theorems. An axiom is a foundational principle used without a proof inside the system. The three axioms used here are propositional extensionality (equivalent propositions are equal), classical choice (an element can be selected from a nonempty type) and quotient soundness (equivalent representatives define the same quotient element). The verification receipt identifies the source, data and proof export by their SHA-256 digests, fingerprints of their contents. A new run writes its receipt, declaration list and logs to `formal/.lake/replay/`. [Recorded receipt](../formal/verification/receipt.json) · [Declaration inventory](../formal/verification/declarations.tsv) · [Standard replay](../formal/verification/kernel.log) · [Paranoid replay](../formal/verification/paranoid.log)

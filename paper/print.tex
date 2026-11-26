@@ -1,0 +1,92 @@
+\documentclass[a4paper,11pt,reqno,twoside]{amsart}
+\usepackage[left=28mm,right=28mm,top=28mm,bottom=27mm,headheight=13pt,headsep=13pt]{geometry}
+\usepackage{lmodern,amssymb,graphicx,booktabs,color,hyperref}
+\definecolor{proofink}{rgb}{0.20,0.29,0.34}
+\hypersetup{colorlinks=true,linkcolor=proofink,urlcolor=proofink,
+  pdftitle={$title$},pdfauthor={$for(credits)$$credits.names$ ($credits.role$)$sep$, $endfor$},
+  pdfdisplaydoctitle=true,bookmarksnumbered=true,bookmarksopen=true,
+  bookmarksopenlevel=0,bookmarksdepth=2}
+\urlstyle{same}
+\setcounter{secnumdepth}{2}
+\setlength{\parindent}{1.35em}
+\setlength{\emergencystretch}{1.5em}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\clubpenalty=8500
+\widowpenalty=8500
+\displaywidowpenalty=5000
+\raggedbottom
+\newtheorem{papertheorem}{Theorem}
+\newtheorem{paperlemma}{Lemma}[section]
+\newtheorem{paperproposition}[paperlemma]{Proposition}
+\newtheorem{papercorollary}[paperlemma]{Corollary}
+\theoremstyle{definition}
+\newtheorem{paperdefinition}[paperlemma]{Definition}
+% Reject a mismatch between a statement number on GitHub and its printed number.
+\newcommand{\checkstatement}[2]{%
+  \begingroup\edef\actualnumber{#1}\def\sourcenumber{#2}%
+  \ifx\actualnumber\sourcenumber\else
+    \PackageError{manuscript}{Statement #2 has TeX number \actualnumber}
+      {Check the order and section numbers of the Markdown theorem statements.}%
+  \fi\endgroup}
+% Read both fonts by filename from the TeX bundle, so code listings build
+% independently of the host system's font configuration.
+\font\leansource="[DejaVuSansMono.ttf]" at 8.2pt
+\font\leanmath="[latinmodern-math.otf]" at 8.2pt
+\newcommand{\leanchar}[1]{%
+  \iffontchar\leansource"#1\relax\char"#1\relax
+  \else\iffontchar\leanmath"#1\relax{\leanmath\char"#1\relax}%
+  \else\PackageError{manuscript}{Missing Lean source glyph U+#1}{Supply a font with this glyph.}%
+  \fi\fi}
+\newcommand{\leangap}{\hskip\fontdimen2\leansource\relax}
+% Keep a complete declaration on the page whenever it can fit on one page.
+% The smaller strut supplies the leading of the code font instead of the prose font.
+\newbox\leanlisting
+\newenvironment{leanscript}{%
+  \par\setbox\leanlisting=\vbox\bgroup\hsize=\linewidth
+  \addvspace{5pt}\begingroup\leansource\baselineskip=10.5pt
+  \setbox\strutbox=\hbox{\vrule height 7.3pt depth 2pt width 0pt}%
+  \parskip=0pt\parindent=0pt\rightskip=0pt plus 1fil\parfillskip=0pt
+  \hyphenpenalty=10000\exhyphenpenalty=10000
+}{%
+  \par\endgroup\addvspace{6pt}\egroup
+  \ifdim\dimexpr\ht\leanlisting+\dp\leanlisting\relax>\textheight
+    \unvbox\leanlisting
+  \else\box\leanlisting\fi\par}
+\newcommand{\leanline}[1]{\noindent\hangindent=2em\hangafter=1\strut#1\par}
+\newcommand{\proofsources}[1]{{\normalfont\footnotesize\color{proofink}#1}}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1}
+
+% AMS running heads and theorem typography; a sentence-case title and explicit
+% contribution roles for this manuscript.
+\makeatletter
+\renewcommand{\@settitle}{%
+  \begin{center}
+    \parbox{0.94\textwidth}{\centering\normalfont\fontsize{21}{25}\selectfont
+      \bfseries\@title\par}
+  \end{center}}
+\renewcommand{\@setauthors}{%
+  \vspace{5pt}
+  \begin{center}
+$for(credits)$
+    {{\footnotesize\textsc{$credits.role$}}\enspace $credits.names$\par}
+$endfor$
+  \end{center}}
+\makeatother
+\title{$title$}
+\author{$for(credits)$$credits.names$$sep$, $endfor$}
+\date{}
+
+\begin{document}
+\special{pdf:fstream @CircleSourceStream (proof-sources.zip) << /Type /EmbeddedFile /Params << /Size $proof-source-size$ >> >>}%
+\special{pdf:obj @CircleSourceSpec << /Type /Filespec /F (proof-sources.zip) /UF (proof-sources.zip) /Desc (Lean proof sources and verification record) /EF << /F @CircleSourceStream >> >>}%
+\special{pdf:names /EmbeddedFiles [(proof-sources.zip) @CircleSourceSpec]}%
+\begin{abstract}
+$abstract$
+\end{abstract}
+\maketitle
+\markboth{\textsc{$investigator$}}
+         {\textsc{$title$}}
+$body$
+\end{document}

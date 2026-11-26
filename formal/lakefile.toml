@@ -1,0 +1,860 @@
+name = "TrainingLaws"
+defaultTargets = [
+  "Channel",
+  "Budget",
+  "Movement",
+  "CircleConfinement",
+  "CircleDynamics",
+  "CircleGrowth",
+  "CircleMoment",
+  "CircleSpectrum",
+  "CircleStats",
+  "CircleTails",
+  "FeatureFlow",
+  "CircleEscape",
+  "CircleEscapeMoment",
+  "CircleEscapeBridge",
+  "CircleGridMoments",
+  "CircleGridMargin",
+  "CircleGridEscape",
+  "CircleInitializationCheck",
+  "CircleLayerRates",
+  "CircleActiveSpeed",
+  "CircleActualTracking",
+  "CircleAngularGeometry",
+  "CircleBroadFlow",
+  "CircleCapInduction",
+  "CircleCapMoments",
+  "CircleClosedForms",
+  "CircleCoefficientRemainder",
+  "CircleComparison",
+  "CircleConditioning",
+  "CircleContinuationBound",
+  "CircleDesignRadius",
+  "CircleDiagonalTangent",
+  "CircleDiscreteBudget",
+  "CircleDiscreteMoments",
+  "CircleDiscreteTracking",
+  "CircleEarlyFit",
+  "CircleEarlySchedule",
+  "CircleEarlyStopping",
+  "CircleEarlyWidth",
+  "CircleEulerComparison",
+  "CircleEulerLimits",
+  "CircleEulerPolygon",
+  "CircleFiniteCoefficient",
+  "CircleFiniteComparison",
+  "CircleFiniteConfidence",
+  "CircleFiniteDynamics",
+  "CircleFiniteHorizons",
+  "CircleFiniteSchedule",
+  "CircleFiniteWidth",
+  "CircleFirstCosine",
+  "CircleFirstCosineReference",
+  "CircleFitSupport",
+  "CircleFlowBlockMovement",
+  "CircleFlowConstruction",
+  "CircleFlowMoments",
+  "CircleFlowPath",
+  "CircleFlowTracking",
+  "CircleFoldedIntegral",
+  "CircleFourthEigen",
+  "CircleFourthFeature",
+  "CircleFourthSmallBall",
+  "CircleGDLimits",
+  "CircleGaussianBernstein",
+  "CircleGaussianCDF",
+  "CircleGaussianLimit",
+  "CircleGaussianMargin",
+  "CircleGaussianTracking",
+  "CircleGlobalGluing",
+  "CircleGridSpectrum",
+  "CircleGroupedBudget",
+  "CircleGroupedDyadic",
+  "CircleGroupedDynamics",
+  "CircleGroupedGrowthWidth",
+  "CircleGroupedResidual",
+  "CircleGroupedTrainingSchedule",
+  "CircleGroupedWidth",
+  "CircleInclusionExistence",
+  "CircleInitialResidualSecond",
+  "CircleInitializationConcentration",
+  "CircleKernelGD",
+  "CircleKernelIdentification",
+  "CircleLocalContinuation",
+  "CircleMajorityCF",
+  "CircleMajorityFold",
+  "CircleMajorityLimit",
+  "CircleMarginMass",
+  "CircleMeanDynamics",
+  "CircleMixingEnvelopes",
+  "CircleNarrowConditioning",
+  "CircleNecessaryWidth",
+  "CircleNeuronSpeed",
+  "CirclePairedCoefficient",
+  "CirclePairedData",
+  "CirclePairedGDBox",
+  "CirclePairedGDCenter",
+  "CirclePairedGDClock",
+  "CirclePairedGDClocksTail",
+  "CirclePairedGDCoordinates",
+  "CirclePairedGDCost",
+  "CirclePairedGDEndpoint",
+  "CirclePairedGDFiniteTail",
+  "CirclePairedGDGeometry",
+  "CirclePairedGDIntegrable",
+  "CirclePairedGDScalar",
+  "CirclePairedGDShadow",
+  "CirclePairedGDTail",
+  "CirclePairedGDTheorem",
+  "CirclePairedGDTube",
+  "CirclePairedGDTypical",
+  "CirclePairedOrdering",
+  "CirclePairedResidualData",
+  "CirclePairedSecondOrder",
+  "CirclePairedTheorem",
+  "CirclePathSelection",
+  "CirclePositiveConfidence",
+  "CirclePositiveSchedule",
+  "CirclePositiveSpectrum",
+  "CirclePositiveWidth",
+  "CircleProjectedStep",
+  "CirclePublishedFlowEvent",
+  "CirclePublishedFlowFinite",
+  "CirclePublishedFourth",
+  "CircleRateConditioning",
+  "CircleRateTrajectory",
+  "CircleReadoutMargin",
+  "CircleReadoutMixing",
+  "CircleReciprocal",
+  "CircleReciprocalCriterion",
+  "CircleReciprocalDesign",
+  "CircleReciprocalEarly",
+  "CircleReciprocalEscape",
+  "CircleReciprocalFinite",
+  "CircleReciprocalFourth",
+  "CircleReciprocalSpectral",
+  "CircleReciprocalTracking",
+  "CircleReferenceDistribution",
+  "CircleReferenceKurtosis",
+  "CircleReferenceMixture",
+  "CircleReferenceMoments",
+  "CircleResidualSpectrum",
+  "CircleScoreMargin",
+  "CircleSeedIntegrability",
+  "CircleSegmentIdentity",
+  "CircleSevenDesign",
+  "CircleSevenGrouped",
+  "CircleSevenIntervals",
+  "CircleSevenRadius",
+  "CircleSevenSpectrum",
+  "CircleSevenTraining",
+  "CircleSevenTrig",
+  "CircleSharpEvent",
+  "CircleSharpGD",
+  "CircleSharpGDMoments",
+  "CircleSharpInitialization",
+  "CircleSharpMoments",
+  "CircleSharpTracking",
+  "CircleShortEquivalent",
+  "CircleShortFlowProjection",
+  "CircleShortGDTails",
+  "CircleSignedAngular",
+  "CircleSignedArc",
+  "CircleSignedRates",
+  "CircleSignedRow",
+  "CircleSpectralPathLength",
+  "CircleSphereBand",
+  "CircleStoppedFlow",
+  "CircleSynchronizedEscape",
+  "CircleSynchronizedWidth",
+  "CircleTangentDrift",
+  "CircleTeacherRKHS",
+  "CircleTruncatedBudget",
+  "CircleUniformMargins",
+  "CircleUniformRadius",
+  "CircleVariableFlow",
+  "CircleVariableFlowSchedule",
+  "CircleVariableGD",
+  "CircleWeakPrediction",
+  "CircleWeightedDynamics",
+  "CircleWeightedStep",
+  "CircleWidthAsymptotics",
+  "CircleWidthEnergyScreen",
+  "CircleWidthFinite",
+  "CircleWidthGaussianEnergy",
+  "CircleWidthInitTail",
+  "CircleWidthMoment",
+  "CircleWidthPathEnergy",
+  "CircleWidthPolynomial",
+  "CircleWidthPublished",
+  "CircleWidthResidualTail",
+  "CircleWidthThreshold",
+  "CircleWidthTracking",
+  "CircleWidthUpper",
+  "FeatureFlowPerturbation",
+  "FeatureFlowTangent",
+  "GaussianReflection",
+  "GaussianSpectralBudget",
+  "GaussianTraceBudget",
+  "LinearLeastSquares",
+  "NonlinearBudget",
+  "PhysicalInitialization",
+  "PhysicalMovement",
+  "PhysicalTangentIdentity",
+  "PhysicalTangentLaw",
+  "SmoothBudgetLaw",
+  "SmoothGaussianLaw",
+  "SmoothGramLimit",
+  "SmoothSeedLaw",
+  "SmoothTrainingLimit",
+  "TwoLayerBudget",
+  "TwoLayerInitialization",
+  "TwoLayerLimit",
+  "TwoLayerMoments",
+  "TwoLayerNetwork",
+]
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "56a005855ea17e0b0958f73ec801ae140b0a1679"
+
+[[lean_lib]]
+name = "Channel"
+
+[[lean_lib]]
+name = "Budget"
+
+[[lean_lib]]
+name = "Movement"
+
+[[lean_lib]]
+name = "CircleConfinement"
+
+[[lean_lib]]
+name = "CircleDynamics"
+
+[[lean_lib]]
+name = "CircleGrowth"
+
+[[lean_lib]]
+name = "CircleMoment"
+
+[[lean_lib]]
+name = "CircleSpectrum"
+
+[[lean_lib]]
+name = "CircleStats"
+
+[[lean_lib]]
+name = "CircleTails"
+
+[[lean_lib]]
+name = "FeatureFlow"
+
+[[lean_lib]]
+name = "CircleEscape"
+
+[[lean_lib]]
+name = "CircleEscapeMoment"
+
+[[lean_lib]]
+name = "CircleEscapeBridge"
+
+[[lean_lib]]
+name = "CircleGridMoments"
+
+[[lean_lib]]
+name = "CircleGridMargin"
+
+[[lean_lib]]
+name = "CircleGridEscape"
+
+[[lean_lib]]
+name = "CircleInitializationCheck"
+
+[[lean_lib]]
+name = "CircleLayerRates"
+
+[[lean_lib]]
+name = "CircleActiveSpeed"
+
+[[lean_lib]]
+name = "CircleActualTracking"
+
+[[lean_lib]]
+name = "CircleAngularGeometry"
+
+[[lean_lib]]
+name = "CircleBroadFlow"
+
+[[lean_lib]]
+name = "CircleCapInduction"
+
+[[lean_lib]]
+name = "CircleCapMoments"
+
+[[lean_lib]]
+name = "CircleClosedForms"
+
+[[lean_lib]]
+name = "CircleCoefficientRemainder"
+
+[[lean_lib]]
+name = "CircleComparison"
+
+[[lean_lib]]
+name = "CircleConditioning"
+
+[[lean_lib]]
+name = "CircleContinuationBound"
+
+[[lean_lib]]
+name = "CircleDesignRadius"
+
+[[lean_lib]]
+name = "CircleDiagonalTangent"
+
+[[lean_lib]]
+name = "CircleDiscreteBudget"
+
+[[lean_lib]]
+name = "CircleDiscreteMoments"
+
+[[lean_lib]]
+name = "CircleDiscreteTracking"
+
+[[lean_lib]]
+name = "CircleEarlyFit"
+
+[[lean_lib]]
+name = "CircleEarlySchedule"
+
+[[lean_lib]]
+name = "CircleEarlyStopping"
+
+[[lean_lib]]
+name = "CircleEarlyWidth"
+
+[[lean_lib]]
+name = "CircleEulerComparison"
+
+[[lean_lib]]
+name = "CircleEulerLimits"
+
+[[lean_lib]]
+name = "CircleEulerPolygon"
+
+[[lean_lib]]
+name = "CircleFiniteCoefficient"
+
+[[lean_lib]]
+name = "CircleFiniteComparison"
+
+[[lean_lib]]
+name = "CircleFiniteConfidence"
+
+[[lean_lib]]
+name = "CircleFiniteDynamics"
+
+[[lean_lib]]
+name = "CircleFiniteHorizons"
+
+[[lean_lib]]
+name = "CircleFiniteSchedule"
+
+[[lean_lib]]
+name = "CircleFiniteWidth"
+
+[[lean_lib]]
+name = "CircleFirstCosine"
+
+[[lean_lib]]
+name = "CircleFirstCosineReference"
+
+[[lean_lib]]
+name = "CircleFitSupport"
+
+[[lean_lib]]
+name = "CircleFlowBlockMovement"
+
+[[lean_lib]]
+name = "CircleFlowConstruction"
+
+[[lean_lib]]
+name = "CircleFlowMoments"
+
+[[lean_lib]]
+name = "CircleFlowPath"
+
+[[lean_lib]]
+name = "CircleFlowTracking"
+
+[[lean_lib]]
+name = "CircleFoldedIntegral"
+
+[[lean_lib]]
+name = "CircleFourthEigen"
+
+[[lean_lib]]
+name = "CircleFourthFeature"
+
+[[lean_lib]]
+name = "CircleFourthSmallBall"
+
+[[lean_lib]]
+name = "CircleGDLimits"
+
+[[lean_lib]]
+name = "CircleGaussianBernstein"
+
+[[lean_lib]]
+name = "CircleGaussianCDF"
+
+[[lean_lib]]
+name = "CircleGaussianLimit"
+
+[[lean_lib]]
+name = "CircleGaussianMargin"
+
+[[lean_lib]]
+name = "CircleGaussianTracking"
+
+[[lean_lib]]
+name = "CircleGlobalGluing"
+
+[[lean_lib]]
+name = "CircleGridSpectrum"
+
+[[lean_lib]]
+name = "CircleGroupedBudget"
+
+[[lean_lib]]
+name = "CircleGroupedDyadic"
+
+[[lean_lib]]
+name = "CircleGroupedDynamics"
+
+[[lean_lib]]
+name = "CircleGroupedGrowthWidth"
+
+[[lean_lib]]
+name = "CircleGroupedResidual"
+
+[[lean_lib]]
+name = "CircleGroupedTrainingSchedule"
+
+[[lean_lib]]
+name = "CircleGroupedWidth"
+
+[[lean_lib]]
+name = "CircleInclusionExistence"
+
+[[lean_lib]]
+name = "CircleInitialResidualSecond"
+
+[[lean_lib]]
+name = "CircleInitializationConcentration"
+
+[[lean_lib]]
+name = "CircleKernelGD"
+
+[[lean_lib]]
+name = "CircleKernelIdentification"
+
+[[lean_lib]]
+name = "CircleLocalContinuation"
+
+[[lean_lib]]
+name = "CircleMajorityCF"
+
+[[lean_lib]]
+name = "CircleMajorityFold"
+
+[[lean_lib]]
+name = "CircleMajorityLimit"
+
+[[lean_lib]]
+name = "CircleMarginMass"
+
+[[lean_lib]]
+name = "CircleMeanDynamics"
+
+[[lean_lib]]
+name = "CircleMixingEnvelopes"
+
+[[lean_lib]]
+name = "CircleNarrowConditioning"
+
+[[lean_lib]]
+name = "CircleNecessaryWidth"
+
+[[lean_lib]]
+name = "CircleNeuronSpeed"
+
+[[lean_lib]]
+name = "CirclePairedCoefficient"
+
+[[lean_lib]]
+name = "CirclePairedData"
+
+[[lean_lib]]
+name = "CirclePairedGDBox"
+
+[[lean_lib]]
+name = "CirclePairedGDCenter"
+
+[[lean_lib]]
+name = "CirclePairedGDClock"
+
+[[lean_lib]]
+name = "CirclePairedGDClocksTail"
+
+[[lean_lib]]
+name = "CirclePairedGDCoordinates"
+
+[[lean_lib]]
+name = "CirclePairedGDCost"
+
+[[lean_lib]]
+name = "CirclePairedGDEndpoint"
+
+[[lean_lib]]
+name = "CirclePairedGDFiniteTail"
+
+[[lean_lib]]
+name = "CirclePairedGDGeometry"
+
+[[lean_lib]]
+name = "CirclePairedGDIntegrable"
+
+[[lean_lib]]
+name = "CirclePairedGDScalar"
+
+[[lean_lib]]
+name = "CirclePairedGDShadow"
+
+[[lean_lib]]
+name = "CirclePairedGDTail"
+
+[[lean_lib]]
+name = "CirclePairedGDTheorem"
+
+[[lean_lib]]
+name = "CirclePairedGDTube"
+
+[[lean_lib]]
+name = "CirclePairedGDTypical"
+
+[[lean_lib]]
+name = "CirclePairedOrdering"
+
+[[lean_lib]]
+name = "CirclePairedResidualData"
+
+[[lean_lib]]
+name = "CirclePairedSecondOrder"
+
+[[lean_lib]]
+name = "CirclePairedTheorem"
+
+[[lean_lib]]
+name = "CirclePathSelection"
+
+[[lean_lib]]
+name = "CirclePositiveConfidence"
+
+[[lean_lib]]
+name = "CirclePositiveSchedule"
+
+[[lean_lib]]
+name = "CirclePositiveSpectrum"
+
+[[lean_lib]]
+name = "CirclePositiveWidth"
+
+[[lean_lib]]
+name = "CircleProjectedStep"
+
+[[lean_lib]]
+name = "CirclePublishedFlowEvent"
+
+[[lean_lib]]
+name = "CirclePublishedFlowFinite"
+
+[[lean_lib]]
+name = "CirclePublishedFourth"
+
+[[lean_lib]]
+name = "CircleRateConditioning"
+
+[[lean_lib]]
+name = "CircleRateTrajectory"
+
+[[lean_lib]]
+name = "CircleReadoutMargin"
+
+[[lean_lib]]
+name = "CircleReadoutMixing"
+
+[[lean_lib]]
+name = "CircleReciprocal"
+
+[[lean_lib]]
+name = "CircleReciprocalCriterion"
+
+[[lean_lib]]
+name = "CircleReciprocalDesign"
+
+[[lean_lib]]
+name = "CircleReciprocalEarly"
+
+[[lean_lib]]
+name = "CircleReciprocalEscape"
+
+[[lean_lib]]
+name = "CircleReciprocalFinite"
+
+[[lean_lib]]
+name = "CircleReciprocalFourth"
+
+[[lean_lib]]
+name = "CircleReciprocalSpectral"
+
+[[lean_lib]]
+name = "CircleReciprocalTracking"
+
+[[lean_lib]]
+name = "CircleReferenceDistribution"
+
+[[lean_lib]]
+name = "CircleReferenceKurtosis"
+
+[[lean_lib]]
+name = "CircleReferenceMixture"
+
+[[lean_lib]]
+name = "CircleReferenceMoments"
+
+[[lean_lib]]
+name = "CircleResidualSpectrum"
+
+[[lean_lib]]
+name = "CircleScoreMargin"
+
+[[lean_lib]]
+name = "CircleSeedIntegrability"
+
+[[lean_lib]]
+name = "CircleSegmentIdentity"
+
+[[lean_lib]]
+name = "CircleSevenDesign"
+
+[[lean_lib]]
+name = "CircleSevenGrouped"
+
+[[lean_lib]]
+name = "CircleSevenIntervals"
+
+[[lean_lib]]
+name = "CircleSevenRadius"
+
+[[lean_lib]]
+name = "CircleSevenSpectrum"
+
+[[lean_lib]]
+name = "CircleSevenTraining"
+
+[[lean_lib]]
+name = "CircleSevenTrig"
+
+[[lean_lib]]
+name = "CircleSharpEvent"
+
+[[lean_lib]]
+name = "CircleSharpGD"
+
+[[lean_lib]]
+name = "CircleSharpGDMoments"
+
+[[lean_lib]]
+name = "CircleSharpInitialization"
+
+[[lean_lib]]
+name = "CircleSharpMoments"
+
+[[lean_lib]]
+name = "CircleSharpTracking"
+
+[[lean_lib]]
+name = "CircleShortEquivalent"
+
+[[lean_lib]]
+name = "CircleShortFlowProjection"
+
+[[lean_lib]]
+name = "CircleShortGDTails"
+
+[[lean_lib]]
+name = "CircleSignedAngular"
+
+[[lean_lib]]
+name = "CircleSignedArc"
+
+[[lean_lib]]
+name = "CircleSignedRates"
+
+[[lean_lib]]
+name = "CircleSignedRow"
+
+[[lean_lib]]
+name = "CircleSpectralPathLength"
+
+[[lean_lib]]
+name = "CircleSphereBand"
+
+[[lean_lib]]
+name = "CircleStoppedFlow"
+
+[[lean_lib]]
+name = "CircleSynchronizedEscape"
+
+[[lean_lib]]
+name = "CircleSynchronizedWidth"
+
+[[lean_lib]]
+name = "CircleTangentDrift"
+
+[[lean_lib]]
+name = "CircleTeacherRKHS"
+
+[[lean_lib]]
+name = "CircleTruncatedBudget"
+
+[[lean_lib]]
+name = "CircleUniformMargins"
+
+[[lean_lib]]
+name = "CircleUniformRadius"
+
+[[lean_lib]]
+name = "CircleVariableFlow"
+
+[[lean_lib]]
+name = "CircleVariableFlowSchedule"
+
+[[lean_lib]]
+name = "CircleVariableGD"
+
+[[lean_lib]]
+name = "CircleWeakPrediction"
+
+[[lean_lib]]
+name = "CircleWeightedDynamics"
+
+[[lean_lib]]
+name = "CircleWeightedStep"
+
+[[lean_lib]]
+name = "CircleWidthAsymptotics"
+
+[[lean_lib]]
+name = "CircleWidthEnergyScreen"
+
+[[lean_lib]]
+name = "CircleWidthFinite"
+
+[[lean_lib]]
+name = "CircleWidthGaussianEnergy"
+
+[[lean_lib]]
+name = "CircleWidthInitTail"
+
+[[lean_lib]]
+name = "CircleWidthMoment"
+
+[[lean_lib]]
+name = "CircleWidthPathEnergy"
+
+[[lean_lib]]
+name = "CircleWidthPolynomial"
+
+[[lean_lib]]
+name = "CircleWidthPublished"
+
+[[lean_lib]]
+name = "CircleWidthResidualTail"
+
+[[lean_lib]]
+name = "CircleWidthThreshold"
+
+[[lean_lib]]
+name = "CircleWidthTracking"
+
+[[lean_lib]]
+name = "CircleWidthUpper"
+
+[[lean_lib]]
+name = "FeatureFlowPerturbation"
+
+[[lean_lib]]
+name = "FeatureFlowTangent"
+
+[[lean_lib]]
+name = "GaussianReflection"
+
+[[lean_lib]]
+name = "GaussianSpectralBudget"
+
+[[lean_lib]]
+name = "GaussianTraceBudget"
+
+[[lean_lib]]
+name = "LinearLeastSquares"
+
+[[lean_lib]]
+name = "NonlinearBudget"
+
+[[lean_lib]]
+name = "PhysicalInitialization"
+
+[[lean_lib]]
+name = "PhysicalMovement"
+
+[[lean_lib]]
+name = "PhysicalTangentIdentity"
+
+[[lean_lib]]
+name = "PhysicalTangentLaw"
+
+[[lean_lib]]
+name = "SmoothBudgetLaw"
+
+[[lean_lib]]
+name = "SmoothGaussianLaw"
+
+[[lean_lib]]
+name = "SmoothGramLimit"
+
+[[lean_lib]]
+name = "SmoothSeedLaw"
+
+[[lean_lib]]
+name = "SmoothTrainingLimit"
+
+[[lean_lib]]
+name = "TwoLayerBudget"
+
+[[lean_lib]]
+name = "TwoLayerInitialization"
+
+[[lean_lib]]
+name = "TwoLayerLimit"
+
+[[lean_lib]]
+name = "TwoLayerMoments"
+
+[[lean_lib]]
+name = "TwoLayerNetwork"
