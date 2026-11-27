@@ -1,6 +1,0 @@
-'CircleInitializationCheck.capRate_eq_min' depends on axioms: [propext, Classical.choice, Quot.sound]
-'CircleInitializationCheck.trajectory_on_check' depends on axioms: [propext, Classical.choice, Quot.sound]
-'CircleInitializationCheck.restricted_mse' depends on axioms: [propext, Classical.choice, Quot.sound]
-'CircleInitializationCheck.failing_mse_lower' depends on axioms: [propext, Classical.choice, Quot.sound]
-'CircleInitializationCheck.ensemble_mse' depends on axioms: [propext, Classical.choice, Quot.sound]
-'CircleInitializationCheck.capped_energy_bootstrap' depends on axioms: [propext, Classical.choice, Quot.sound]

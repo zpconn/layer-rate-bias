@@ -13,7 +13,7 @@ from matplotlib.ticker import FixedLocator, StrMethodFormatter
 HERE = Path(__file__).resolve().parent
 STRATA = (
     ("natural", "Unconditional Gaussian", "o", "#0072B2"),
-    ("above", r"Gaussian given $Q_N f_0>1$", "^", "#C54D00"),
+    ("above", r"Gaussian given $X<0$", "^", "#D55E00"),
 )
 
 
@@ -40,7 +40,16 @@ def load_pairs(path):
     return coefficients.pop(), pairs
 
 
-def draw_panel(ax, xlim, ylim, slope, pairs, title):
+def refinement_by_stratum(path):
+    with path.open(newline="") as csv_file:
+        rows = [r for r in csv.DictReader(csv_file) if r["n"] == "3" and r["m"] == "32768"]
+    return {
+        stratum: max(float(r["max_pair_change"]) for r in rows if r["stratum"] == stratum)
+        for stratum, *_ in STRATA
+    }
+
+
+def draw_panel(ax, xlim, ylim, slope, pairs, refinement, title):
     ax.axhline(0, color="0.63", linewidth=0.75, zorder=0)
     ax.axvline(0, color="0.63", linewidth=0.75, zorder=0)
     (reference,) = ax.plot(
@@ -48,12 +57,15 @@ def draw_panel(ax, xlim, ylim, slope, pairs, title):
         [slope * x for x in xlim],
         color="0.18",
         linewidth=1.0,
-        label=r"Finite grid $D=c_3 x$",
+        label=r"Prediction $N^2\Delta=c_3 X$",
         zorder=1,
     )
     point_handles = []
     for stratum, label, marker, color in STRATA:
         x, y = zip(*pairs[stratum])
+        if refinement:
+            ax.errorbar(x, y, yerr=refinement[stratum], fmt="none",
+                        ecolor=color, elinewidth=0.6, capsize=1.5, zorder=1)
         point_handles.append(
             ax.scatter(
                 x,
@@ -68,7 +80,7 @@ def draw_panel(ax, xlim, ylim, slope, pairs, title):
                 zorder=2,
             )
         )
-    ax.set(xlim=xlim, ylim=ylim, xlabel=r"Initial deficit $x=1-Q_N f_0$")
+    ax.set(xlim=xlim, ylim=ylim, xlabel=r"Initial deficit $X=1-Q_N f_0$")
     ax.set_title(title, loc="left", pad=8, fontsize=10.5, fontweight="bold")
     ax.spines[["top", "right"]].set_visible(False)
     ax.spines[["bottom", "left"]].set_color("0.4")
@@ -81,9 +93,15 @@ def main():
     parser.add_argument(
         "--input", type=Path, default=HERE / "paired-runs.csv"
     )
+    parser.add_argument("--refinement", type=Path,
+                        help="step-halving summary for the plotted pairs")
     parser.add_argument("--output", type=Path, default=HERE.parent / "paper" / "paired-ordering.png")
     args = parser.parse_args()
     slope, pairs = load_pairs(args.input)
+    refinement_path = args.refinement
+    if refinement_path is None and args.input.resolve() == HERE / "paired-runs.csv":
+        refinement_path = HERE / "paired-refinement.csv"
+    refinement = refinement_by_stratum(refinement_path) if refinement_path else {}
     for stratum, points in pairs.items():
         correct = sum(x * y > 0 for x, y in points)
         slow_larger = sum(y > 0 for _, y in points)
@@ -107,12 +125,12 @@ def main():
     )
     fig.subplots_adjust(left=0.105, right=0.985, bottom=0.165, top=0.795, wspace=0.29)
     handles = draw_panel(
-        full, (-0.82, 1.70), (-0.198, 0.39), slope, pairs, "A   All 96 pairs"
+        full, (-0.82, 1.70), (-0.198, 0.39), slope, pairs, refinement, "A   All 96 pairs"
     )
-    full.set_ylabel(r"Measured contrast $D=N^2(Y_{1/2}-Y_2)$", labelpad=4)
+    full.set_ylabel(r"Measured gap $N^2\Delta$", labelpad=4)
     full.xaxis.set_major_locator(FixedLocator([-0.5, 0, 0.5, 1.0, 1.5]))
     draw_panel(
-        zoom, (-0.061, 0.008), (-0.0238, 0.0048), slope, pairs, "B   Near the tie"
+        zoom, (-0.061, 0.008), (-0.0238, 0.0048), slope, pairs, refinement, "B   Near the tie"
     )
     zoom.xaxis.set_major_locator(FixedLocator([-0.06, -0.04, -0.02, 0]))
     zoom.yaxis.set_major_locator(FixedLocator([-0.02, -0.01, 0]))

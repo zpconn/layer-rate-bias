@@ -1,8 +1,8 @@
 # Steering a network’s inductive bias with the hidden-layer learning rate
 
-Two copies of a ReLU network start from the same Gaussian weights and train on the same labeled points around a circle. Changing only the hidden-layer learning rate produces a difference in their average predictions around the whole circle. With probability tending to one as the grid grows, both copies fit the training labels and the initial grid mean predicts the sign and size of their difference. We prove this for full-batch gradient descent and gradient flow. **Both theorems are formalized entirely in Lean.**
+Two copies of a ReLU network start from the same Gaussian weights and train on the same labeled points around a circle. Changing only the hidden-layer learning rate produces a difference in their average predictions around the whole circle. With probability tending to one as the grid grows, both copies fit the training labels and the initial grid mean predicts the sign and size of their difference. We prove this for full-batch gradient descent and gradient flow. The proofs are formalized in Lean 4 with Mathlib.
 
-[Paper (PDF)](paper/paper.pdf) · [Read on GitHub](paper/paper.md) · [First-principles derivation](docs/from-first-principles.md) · [Lean formalization](formal/)
+[Paper (PDF)](paper/paper.pdf) · [Read on GitHub](paper/paper-reader.md) · [First-principles derivation](docs/from-first-principles.md) · [Lean formalization](formal/)
 
 ## The prediction
 
@@ -16,7 +16,11 @@ $$
 
 When the initial grid mean is below one, the slower rate is predicted to finish higher. When it is above one, the choice reverses. With probability tending to one, both copies have grid RMS error at most $N^{-3}$, the **fitting tolerance**. Their grid predictions then differ by at most $2N^{-3}$ in RMS. When the initial deficit has magnitude bounded above and away from zero, the population gap has order $N^{-2}$ on the event where the prediction is accurate. The training choice steers an aspect of the learned function that the fit leaves undetermined.
 
-## The two theorems
+## Finite-grid and asymptotic guarantees
+
+For any odd $N\ge3$, choose a common width $m\ge 1.44\times10^{18}N^{16}$ and GD step $0<\eta\le2/3$. With probability at least $1-2/N$, both copies fit and $|N^2\Delta-c_NX|\le2/N$ at every step beyond their common deadline. The deadline is at most $\lceil384N^2\log N/\eta\rceil$. The result also covers any positive ordered pair of rates with corresponding width and step bounds. The kernel coefficient is positive on every such grid. [Common endpoint](formal/CircleRateDial.lean#L53) · [Training deadlines](formal/CirclePositiveSchedule.lean#L121) · [Coefficient and its limit](formal/CircleRateDial.lean#L24)
+
+The unit-step benchmark and the flow bounds below use a different common endpoint.
 
 At width $m=N^{32}$ the network is $f(u)=m^{-1/2}\sum_{j=1}^m a_j[w_j^\top(\cos u,\sin u)]_+$. All weight coordinates are initially independent standard Gaussians. Both copies minimize half the mean squared grid error. Take $H=\lceil2\pi^2N^2\log(2\sqrt{12}\,N^{7/2})\rceil$ simultaneous unit-step gradient descent (GD) updates, or train by flow until time $H$. GD takes the ReLU derivative to be zero at the kink. The flow theorem covers every admissible measurable choice of Clarke gradient-flow paths. [Discrete update](formal/CircleWeightedStep.lean#L23) · [Flow construction](formal/CircleFlowConstruction.lean#L75)
 
@@ -51,4 +55,4 @@ lake exe cache get
 python3 verify.py --report .lake/replay
 ```
 
-The verifier rebuilds the project and submits the same export to `leanchecker` and `leanchecker-paranoid`. Both accepted all 7,404 safe project declarations, including 6,131 theorems. The paper also embeds the Lean sources and replay instructions as a PDF attachment. [Proof guide](docs/proof-guide.md) · [Verification receipt](formal/verification/receipt.json)
+The verifier rebuilt the paper’s 145-module import closure and replayed the same export through Lean’s kernel checker in standard and paranoid modes. The export includes 5,428 safe project declarations, including 4,511 theorems. The paper also embeds the Lean sources and replay instructions as a PDF attachment. [Proof guide](docs/proof-guide.md) · [Verification receipt](formal/verification/receipt.json)

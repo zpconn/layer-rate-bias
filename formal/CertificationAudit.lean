@@ -1,8 +1,0 @@
-import CircleInitializationCheck
-
-#print axioms CircleInitializationCheck.capRate_eq_min
-#print axioms CircleInitializationCheck.trajectory_on_check
-#print axioms CircleInitializationCheck.restricted_mse
-#print axioms CircleInitializationCheck.failing_mse_lower
-#print axioms CircleInitializationCheck.ensemble_mse
-#print axioms CircleInitializationCheck.capped_energy_bootstrap

@@ -61,10 +61,51 @@ def subset_stats(g, threshold):
     }
 
 
+def original_width_fit(primary):
+    """Fit the three-width trend in the unconditional three-point design."""
+    widths = [512, 8192, 32768]
+    natural = [r for r in primary if r["n"] == 3 and r["stratum"] == "natural"]
+    by_width = [
+        sorted((r for r in natural if r["m"] == m), key=lambda r: r["seed"])
+        for m in widths
+    ]
+    seeds = [r["seed"] for r in by_width[0]]
+    if not seeds or len(set(seeds)) != len(seeds) or any(
+        [r["seed"] for r in group] != seeds for group in by_width
+    ):
+        raise ValueError("The original width fit needs matching distinct seeds at all three widths")
+    coefficients = {9 * (r["b_slow"] - r["b_fast"]) for group in by_width for r in group}
+    if len(coefficients) != 1:
+        raise ValueError("Expected one finite-grid coefficient at N=3")
+    coefficient = coefficients.pop()
+    deficit = np.array([[1 - r["grid0"] for r in group] for group in by_width])
+    scaled_gap = np.array([[r["observed_scaled"] for r in group] for group in by_width])
+
+    def exponent(indices):
+        x, y = deficit[:, indices], scaled_gap[:, indices]
+        shortfall = coefficient - (x * y).sum(axis=-1) / (x * x).sum(axis=-1)
+        if not np.all(shortfall > 0):
+            raise ValueError("The log-width fit requires positive shortfalls")
+        return -np.polyfit(np.log(widths), np.log(shortfall), 1)[0]
+
+    # Each column of the bootstrap index matrix selects one seed at all widths.
+    replicates = 4096
+    bootstrap_seed = 723492
+    draws = np.random.default_rng(bootstrap_seed).integers(
+        len(seeds), size=(replicates, len(seeds))
+    )
+    low, high = np.quantile(exponent(draws), [0.025, 0.975])
+    return dict(n=3, widths=" ".join(map(str, widths)), seeds=len(seeds),
+                replicates=replicates, bootstrap_seed=bootstrap_seed,
+                alpha=exponent(np.arange(len(seeds))), alpha_low=low, alpha_high=high)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", type=Path, default=DIR / "paired-runs.csv")
     parser.add_argument("--output-dir", type=Path, default=DIR)
+    parser.add_argument("--width-fit", action="store_true",
+                        help="also fit the unconditional N=3 three-width trend")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
     with args.input.open() as f:
@@ -125,6 +166,8 @@ def main():
             )
     save(args.output_dir / "paired-summary.csv", summary)
     save(args.output_dir / "paired-refinement.csv", refinements)
+    if args.width_fit:
+        save(args.output_dir / "paired-width-fit.csv", [original_width_fit(base)])
 
 
 if __name__ == "__main__":

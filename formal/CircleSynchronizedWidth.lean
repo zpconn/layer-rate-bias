@@ -306,4 +306,28 @@ theorem divergence_at_critical_scale (N m T : ℕ → ℕ) (b : ℕ → ℝ) (η
   have a' := mul_le_mul_of_nonneg_left q (show 0≤3*(m j:ℝ) by positivity)
   dsimp [C] at a'
   linarith only [a']
+private theorem coord_upper (ℓ c : ℝ) (hℓ : 0 ≤ ℓ) :
+    (gaussianReal 0 1).real (Icc c (c+ℓ)) ≤ ℓ * gaussianPDFReal 0 1 0 := by
+  have upper (x : ℝ) (_hx : x ∈ Icc c (c+ℓ)) : gaussianPDFReal 0 1 x ≤ gaussianPDFReal 0 1 0 := by
+    simp only [gaussianPDFReal, NNReal.coe_one, mul_one, sub_zero]
+    apply mul_le_mul_of_nonneg_left _ (by positivity)
+    apply exp_le_exp.mpr
+    nlinarith only [sq_nonneg x]
+  have fin : volume (Icc c (c+ℓ)) ≠ ⊤ := by rw [Real.volume_Icc]; exact ENNReal.ofReal_ne_top
+  have bound := setIntegral_mono_on (integrable_gaussianPDFReal 0 1).integrableOn (integrableOn_const fin) measurableSet_Icc upper
+  rw [setIntegral_const, smul_eq_mul] at bound
+  rw [measureReal_def, gaussianReal_apply_eq_integral 0 one_ne_zero,
+    ENNReal.toReal_ofReal (integral_nonneg (gaussianPDFReal_nonneg 0 1))]
+  simpa [Real.volume_real_Icc_of_le (show c ≤ c+ℓ by linarith)] using bound
+
+/-- Product-Gaussian upper bound on the probability of the same witness box. -/
+theorem gaussian_box_probability_upper (N m T : ℕ) (hN : 0 < N) (L σ : ℝ) :
+    (seedLaw m).real (syncBox N m T σ L) ≤ (side N T * gaussianPDFReal 0 1 0)^(3*m) := by
+  have hside : 0 ≤ side N T := by unfold side; positivity
+  simp only [seedLaw, syncBox, measureReal_def, Measure.pi_pi, ENNReal.toReal_prod]
+  rw [show 3*m = Fintype.card (Fin m × Fin 3) by simp [mul_comm], ← Finset.card_univ, ← Finset.prod_const]
+  apply Finset.prod_le_prod₀ (fun _ _ => ENNReal.toReal_nonneg)
+  exact fun i _ => coord_upper (side N T) (location σ L i.2) hside
+
+
 end CircleSynchronizedWidth

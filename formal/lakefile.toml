@@ -1,16 +1,16 @@
 name = "TrainingLaws"
 defaultTargets = [
+  "CircleCoefficientExpansion",
+  "CircleReparametrization",
+  "CircleRateDial",
+  "CircleFourierInterpolant",
   "Channel",
-  "Budget",
-  "Movement",
-  "CircleConfinement",
   "CircleDynamics",
   "CircleGrowth",
   "CircleMoment",
   "CircleSpectrum",
   "CircleStats",
   "CircleTails",
-  "FeatureFlow",
   "CircleEscape",
   "CircleEscapeMoment",
   "CircleEscapeBridge",
@@ -19,7 +19,6 @@ defaultTargets = [
   "CircleGridEscape",
   "CircleInitializationCheck",
   "CircleLayerRates",
-  "CircleActiveSpeed",
   "CircleActualTracking",
   "CircleAngularGeometry",
   "CircleBroadFlow",
@@ -29,21 +28,14 @@ defaultTargets = [
   "CircleCoefficientRemainder",
   "CircleComparison",
   "CircleConditioning",
-  "CircleContinuationBound",
-  "CircleDesignRadius",
-  "CircleDiagonalTangent",
   "CircleDiscreteBudget",
   "CircleDiscreteMoments",
   "CircleDiscreteTracking",
   "CircleEarlyFit",
-  "CircleEarlySchedule",
-  "CircleEarlyStopping",
-  "CircleEarlyWidth",
   "CircleEulerComparison",
   "CircleEulerLimits",
   "CircleEulerPolygon",
   "CircleFiniteCoefficient",
-  "CircleFiniteComparison",
   "CircleFiniteConfidence",
   "CircleFiniteDynamics",
   "CircleFiniteHorizons",
@@ -52,7 +44,6 @@ defaultTargets = [
   "CircleFirstCosine",
   "CircleFirstCosineReference",
   "CircleFitSupport",
-  "CircleFlowBlockMovement",
   "CircleFlowConstruction",
   "CircleFlowMoments",
   "CircleFlowPath",
@@ -69,13 +60,6 @@ defaultTargets = [
   "CircleGaussianTracking",
   "CircleGlobalGluing",
   "CircleGridSpectrum",
-  "CircleGroupedBudget",
-  "CircleGroupedDyadic",
-  "CircleGroupedDynamics",
-  "CircleGroupedGrowthWidth",
-  "CircleGroupedResidual",
-  "CircleGroupedTrainingSchedule",
-  "CircleGroupedWidth",
   "CircleInclusionExistence",
   "CircleInitialResidualSecond",
   "CircleInitializationConcentration",
@@ -89,7 +73,6 @@ defaultTargets = [
   "CircleMeanDynamics",
   "CircleMixingEnvelopes",
   "CircleNarrowConditioning",
-  "CircleNecessaryWidth",
   "CircleNeuronSpeed",
   "CirclePairedCoefficient",
   "CirclePairedData",
@@ -119,22 +102,8 @@ defaultTargets = [
   "CirclePositiveSpectrum",
   "CirclePositiveWidth",
   "CircleProjectedStep",
-  "CirclePublishedFlowEvent",
-  "CirclePublishedFlowFinite",
-  "CirclePublishedFourth",
-  "CircleRateConditioning",
   "CircleRateTrajectory",
-  "CircleReadoutMargin",
   "CircleReadoutMixing",
-  "CircleReciprocal",
-  "CircleReciprocalCriterion",
-  "CircleReciprocalDesign",
-  "CircleReciprocalEarly",
-  "CircleReciprocalEscape",
-  "CircleReciprocalFinite",
-  "CircleReciprocalFourth",
-  "CircleReciprocalSpectral",
-  "CircleReciprocalTracking",
   "CircleReferenceDistribution",
   "CircleReferenceKurtosis",
   "CircleReferenceMixture",
@@ -142,77 +111,40 @@ defaultTargets = [
   "CircleResidualSpectrum",
   "CircleScoreMargin",
   "CircleSeedIntegrability",
-  "CircleSegmentIdentity",
-  "CircleSevenDesign",
-  "CircleSevenGrouped",
-  "CircleSevenIntervals",
-  "CircleSevenRadius",
-  "CircleSevenSpectrum",
-  "CircleSevenTraining",
-  "CircleSevenTrig",
   "CircleSharpEvent",
   "CircleSharpGD",
   "CircleSharpGDMoments",
   "CircleSharpInitialization",
   "CircleSharpMoments",
   "CircleSharpTracking",
-  "CircleShortEquivalent",
   "CircleShortFlowProjection",
   "CircleShortGDTails",
   "CircleSignedAngular",
-  "CircleSignedArc",
   "CircleSignedRates",
   "CircleSignedRow",
   "CircleSpectralPathLength",
   "CircleSphereBand",
-  "CircleStoppedFlow",
   "CircleSynchronizedEscape",
   "CircleSynchronizedWidth",
   "CircleTangentDrift",
   "CircleTeacherRKHS",
   "CircleTruncatedBudget",
   "CircleUniformMargins",
-  "CircleUniformRadius",
   "CircleVariableFlow",
   "CircleVariableFlowSchedule",
   "CircleVariableGD",
   "CircleWeakPrediction",
   "CircleWeightedDynamics",
   "CircleWeightedStep",
-  "CircleWidthAsymptotics",
-  "CircleWidthEnergyScreen",
   "CircleWidthFinite",
   "CircleWidthGaussianEnergy",
   "CircleWidthInitTail",
   "CircleWidthMoment",
   "CircleWidthPathEnergy",
-  "CircleWidthPolynomial",
   "CircleWidthPublished",
   "CircleWidthResidualTail",
-  "CircleWidthThreshold",
   "CircleWidthTracking",
   "CircleWidthUpper",
-  "FeatureFlowPerturbation",
-  "FeatureFlowTangent",
-  "GaussianReflection",
-  "GaussianSpectralBudget",
-  "GaussianTraceBudget",
-  "LinearLeastSquares",
-  "NonlinearBudget",
-  "PhysicalInitialization",
-  "PhysicalMovement",
-  "PhysicalTangentIdentity",
-  "PhysicalTangentLaw",
-  "SmoothBudgetLaw",
-  "SmoothGaussianLaw",
-  "SmoothGramLimit",
-  "SmoothSeedLaw",
-  "SmoothTrainingLimit",
-  "TwoLayerBudget",
-  "TwoLayerInitialization",
-  "TwoLayerLimit",
-  "TwoLayerMoments",
-  "TwoLayerNetwork",
 ]
 
 [[require]]
@@ -222,15 +154,6 @@ rev = "56a005855ea17e0b0958f73ec801ae140b0a1679"
 
 [[lean_lib]]
 name = "Channel"
-
-[[lean_lib]]
-name = "Budget"
-
-[[lean_lib]]
-name = "Movement"
-
-[[lean_lib]]
-name = "CircleConfinement"
 
 [[lean_lib]]
 name = "CircleDynamics"
@@ -249,9 +172,6 @@ name = "CircleStats"
 
 [[lean_lib]]
 name = "CircleTails"
-
-[[lean_lib]]
-name = "FeatureFlow"
 
 [[lean_lib]]
 name = "CircleEscape"
@@ -276,9 +196,6 @@ name = "CircleInitializationCheck"
 
 [[lean_lib]]
 name = "CircleLayerRates"
-
-[[lean_lib]]
-name = "CircleActiveSpeed"
 
 [[lean_lib]]
 name = "CircleActualTracking"
@@ -308,15 +225,6 @@ name = "CircleComparison"
 name = "CircleConditioning"
 
 [[lean_lib]]
-name = "CircleContinuationBound"
-
-[[lean_lib]]
-name = "CircleDesignRadius"
-
-[[lean_lib]]
-name = "CircleDiagonalTangent"
-
-[[lean_lib]]
 name = "CircleDiscreteBudget"
 
 [[lean_lib]]
@@ -329,15 +237,6 @@ name = "CircleDiscreteTracking"
 name = "CircleEarlyFit"
 
 [[lean_lib]]
-name = "CircleEarlySchedule"
-
-[[lean_lib]]
-name = "CircleEarlyStopping"
-
-[[lean_lib]]
-name = "CircleEarlyWidth"
-
-[[lean_lib]]
 name = "CircleEulerComparison"
 
 [[lean_lib]]
@@ -348,9 +247,6 @@ name = "CircleEulerPolygon"
 
 [[lean_lib]]
 name = "CircleFiniteCoefficient"
-
-[[lean_lib]]
-name = "CircleFiniteComparison"
 
 [[lean_lib]]
 name = "CircleFiniteConfidence"
@@ -375,9 +271,6 @@ name = "CircleFirstCosineReference"
 
 [[lean_lib]]
 name = "CircleFitSupport"
-
-[[lean_lib]]
-name = "CircleFlowBlockMovement"
 
 [[lean_lib]]
 name = "CircleFlowConstruction"
@@ -428,27 +321,6 @@ name = "CircleGlobalGluing"
 name = "CircleGridSpectrum"
 
 [[lean_lib]]
-name = "CircleGroupedBudget"
-
-[[lean_lib]]
-name = "CircleGroupedDyadic"
-
-[[lean_lib]]
-name = "CircleGroupedDynamics"
-
-[[lean_lib]]
-name = "CircleGroupedGrowthWidth"
-
-[[lean_lib]]
-name = "CircleGroupedResidual"
-
-[[lean_lib]]
-name = "CircleGroupedTrainingSchedule"
-
-[[lean_lib]]
-name = "CircleGroupedWidth"
-
-[[lean_lib]]
 name = "CircleInclusionExistence"
 
 [[lean_lib]]
@@ -486,9 +358,6 @@ name = "CircleMixingEnvelopes"
 
 [[lean_lib]]
 name = "CircleNarrowConditioning"
-
-[[lean_lib]]
-name = "CircleNecessaryWidth"
 
 [[lean_lib]]
 name = "CircleNeuronSpeed"
@@ -578,52 +447,10 @@ name = "CirclePositiveWidth"
 name = "CircleProjectedStep"
 
 [[lean_lib]]
-name = "CirclePublishedFlowEvent"
-
-[[lean_lib]]
-name = "CirclePublishedFlowFinite"
-
-[[lean_lib]]
-name = "CirclePublishedFourth"
-
-[[lean_lib]]
-name = "CircleRateConditioning"
-
-[[lean_lib]]
 name = "CircleRateTrajectory"
 
 [[lean_lib]]
-name = "CircleReadoutMargin"
-
-[[lean_lib]]
 name = "CircleReadoutMixing"
-
-[[lean_lib]]
-name = "CircleReciprocal"
-
-[[lean_lib]]
-name = "CircleReciprocalCriterion"
-
-[[lean_lib]]
-name = "CircleReciprocalDesign"
-
-[[lean_lib]]
-name = "CircleReciprocalEarly"
-
-[[lean_lib]]
-name = "CircleReciprocalEscape"
-
-[[lean_lib]]
-name = "CircleReciprocalFinite"
-
-[[lean_lib]]
-name = "CircleReciprocalFourth"
-
-[[lean_lib]]
-name = "CircleReciprocalSpectral"
-
-[[lean_lib]]
-name = "CircleReciprocalTracking"
 
 [[lean_lib]]
 name = "CircleReferenceDistribution"
@@ -647,30 +474,6 @@ name = "CircleScoreMargin"
 name = "CircleSeedIntegrability"
 
 [[lean_lib]]
-name = "CircleSegmentIdentity"
-
-[[lean_lib]]
-name = "CircleSevenDesign"
-
-[[lean_lib]]
-name = "CircleSevenGrouped"
-
-[[lean_lib]]
-name = "CircleSevenIntervals"
-
-[[lean_lib]]
-name = "CircleSevenRadius"
-
-[[lean_lib]]
-name = "CircleSevenSpectrum"
-
-[[lean_lib]]
-name = "CircleSevenTraining"
-
-[[lean_lib]]
-name = "CircleSevenTrig"
-
-[[lean_lib]]
 name = "CircleSharpEvent"
 
 [[lean_lib]]
@@ -689,9 +492,6 @@ name = "CircleSharpMoments"
 name = "CircleSharpTracking"
 
 [[lean_lib]]
-name = "CircleShortEquivalent"
-
-[[lean_lib]]
 name = "CircleShortFlowProjection"
 
 [[lean_lib]]
@@ -699,9 +499,6 @@ name = "CircleShortGDTails"
 
 [[lean_lib]]
 name = "CircleSignedAngular"
-
-[[lean_lib]]
-name = "CircleSignedArc"
 
 [[lean_lib]]
 name = "CircleSignedRates"
@@ -714,9 +511,6 @@ name = "CircleSpectralPathLength"
 
 [[lean_lib]]
 name = "CircleSphereBand"
-
-[[lean_lib]]
-name = "CircleStoppedFlow"
 
 [[lean_lib]]
 name = "CircleSynchronizedEscape"
@@ -737,9 +531,6 @@ name = "CircleTruncatedBudget"
 name = "CircleUniformMargins"
 
 [[lean_lib]]
-name = "CircleUniformRadius"
-
-[[lean_lib]]
 name = "CircleVariableFlow"
 
 [[lean_lib]]
@@ -758,12 +549,6 @@ name = "CircleWeightedDynamics"
 name = "CircleWeightedStep"
 
 [[lean_lib]]
-name = "CircleWidthAsymptotics"
-
-[[lean_lib]]
-name = "CircleWidthEnergyScreen"
-
-[[lean_lib]]
 name = "CircleWidthFinite"
 
 [[lean_lib]]
@@ -779,16 +564,10 @@ name = "CircleWidthMoment"
 name = "CircleWidthPathEnergy"
 
 [[lean_lib]]
-name = "CircleWidthPolynomial"
-
-[[lean_lib]]
 name = "CircleWidthPublished"
 
 [[lean_lib]]
 name = "CircleWidthResidualTail"
-
-[[lean_lib]]
-name = "CircleWidthThreshold"
 
 [[lean_lib]]
 name = "CircleWidthTracking"
@@ -797,64 +576,13 @@ name = "CircleWidthTracking"
 name = "CircleWidthUpper"
 
 [[lean_lib]]
-name = "FeatureFlowPerturbation"
+name = "CircleRateDial"
 
 [[lean_lib]]
-name = "FeatureFlowTangent"
+name = "CircleFourierInterpolant"
 
 [[lean_lib]]
-name = "GaussianReflection"
+name = "CircleReparametrization"
 
 [[lean_lib]]
-name = "GaussianSpectralBudget"
-
-[[lean_lib]]
-name = "GaussianTraceBudget"
-
-[[lean_lib]]
-name = "LinearLeastSquares"
-
-[[lean_lib]]
-name = "NonlinearBudget"
-
-[[lean_lib]]
-name = "PhysicalInitialization"
-
-[[lean_lib]]
-name = "PhysicalMovement"
-
-[[lean_lib]]
-name = "PhysicalTangentIdentity"
-
-[[lean_lib]]
-name = "PhysicalTangentLaw"
-
-[[lean_lib]]
-name = "SmoothBudgetLaw"
-
-[[lean_lib]]
-name = "SmoothGaussianLaw"
-
-[[lean_lib]]
-name = "SmoothGramLimit"
-
-[[lean_lib]]
-name = "SmoothSeedLaw"
-
-[[lean_lib]]
-name = "SmoothTrainingLimit"
-
-[[lean_lib]]
-name = "TwoLayerBudget"
-
-[[lean_lib]]
-name = "TwoLayerInitialization"
-
-[[lean_lib]]
-name = "TwoLayerLimit"
-
-[[lean_lib]]
-name = "TwoLayerMoments"
-
-[[lean_lib]]
-name = "TwoLayerNetwork"
+name = "CircleCoefficientExpansion"

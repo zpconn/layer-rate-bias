@@ -71,15 +71,6 @@ local function mark_structure(blocks)
       appendix = true
       remove_label(block)
       out:insert(block)
-    elseif block.t == "Header" and pandoc.utils.stringify(block.content) == "References" and
-           next_block and next_block.t == "OrderedList" then
-      local entries = next_block.content
-      out:insert(raw("\\begin{thebibliography}{" .. #entries .. "}\\label{references}"))
-      for number, entry in ipairs(entries) do
-        out:insert(raw("\\bibitem{ref-" .. number .. "} " .. latex(entry)))
-      end
-      out:insert(raw("\\end{thebibliography}"))
-      i = i + 1
     else
       out:insert(block)
     end
@@ -111,7 +102,7 @@ local function theorem(quote)
   remove_label(first)
   local blocks = quote.content
   local opening = "\\begin{" .. env .. "}[{" .. name .. "}]\\checkstatement{\\the" .. counter .. "}{" .. n .. "}"
-  if kind == "Theorem" and (n == "1" or n == "2") then
+  if kind == "Theorem" then
     opening = opening .. "\\pdfbookmark[2]{Theorem " .. n .. " (" .. name .. ")}{main-theorem-" .. n .. "}"
   end
   blocks:insert(1, raw(opening))
@@ -119,16 +110,8 @@ local function theorem(quote)
   return blocks
 end
 
-local function bibliography_citation(link)
-  if link.target == "#references" then
-    local n = pandoc.utils.stringify(link.content):match("^%[(%d+)%]$")
-    if n then return pandoc.RawInline("latex", "\\cite{ref-" .. n .. "}") end
-  end
-end
-
 local function source_link(inline)
-  return inline.t == "Link" and (inline.target:find("/formal/", 1, true)
-    or inline.target:find("/docs/", 1, true) or inline.target:find("/layer-rates/", 1, true))
+  return inline.t == "Link" and ("/" .. inline.target):find("/formal/", 1, true)
 end
 
 -- Set the trailing groups of clickable Lean references at citation size, keeping
@@ -142,8 +125,8 @@ local function citations(paragraph)
     i = i - 4
   end
   local opening = i == 1 and "\\noindent\\proofsources{" or "\\proofsources{"
-  inlines:insert(i, pandoc.RawInline("latex", opening))
-  inlines:insert(pandoc.RawInline("latex", "}"))
+  inlines:insert(i, pandoc.RawInline("latex", opening .. "[Lean: "))
+  inlines:insert(pandoc.RawInline("latex", "]}"))
   return paragraph
 end
 
@@ -192,12 +175,41 @@ local function code_span(code)
   if code.text:find("[\128-\255]") then
     return pandoc.RawInline("latex", "{\\leansource " .. source_line(code.text) .. "}")
   end
-  if code.text:match("[/._:%-]") and not code.text:find("[{}\\]") then
-    return pandoc.RawInline("latex", "{\\small\\ttfamily\\nolinkurl{" .. code.text .. "}}")
+  if #code.text >= 32 and code.text:match("^%x+$") then
+    return pandoc.RawInline("latex", "{\\small\\ttfamily " .. code.text:gsub("(........)", "%1\\allowbreak{}") .. "}")
+  end
+  if code.text:match("^[%w_/.:%-]+$") then
+    local text = code.text:gsub("(%l)(%u)", "%1\\allowbreak{}%2")
+      :gsub("([./:%-])", "%1\\allowbreak{}"):gsub("_", "\\_\\allowbreak{}")
+    return pandoc.RawInline("latex", "{\\small\\ttfamily " .. text .. "}")
   end
 end
 
 local function table_float(tbl)
+  if pandoc.utils.stringify(tbl.head.rows[1].cells[1].contents) == "Paper object" then
+    -- Keep the large statement audit paginated and repeat its heading on each page.
+    local cols = {"@{}p{.13\\linewidth}", "p{.265\\linewidth}", "p{.235\\linewidth}", "p{.27\\linewidth}@{}"}
+    for i, col in ipairs(cols) do cols[i] = col:gsub("p{", ">{\\raggedright\\arraybackslash}p{") end
+    local function line(row)
+      local cells = {}
+      for column, cell in ipairs(row.cells) do
+        local value = latex(cell.contents)
+        if column == 3 then value = value:gsub("(}{)([%a]+%.lean:%d+)(})", function(left, name, right)
+          return left .. name:gsub("(%l)(%u)", "%1\\allowbreak{}%2") .. right end) end
+        cells[#cells + 1] = value
+      end
+      return table.concat(cells, " & ") .. "\\tabularnewline"
+    end
+    local header = line(tbl.head.rows[1])
+    local lines = {"\\begingroup\\small\\setlength{\\tabcolsep}{3pt}",
+      "\\begin{longtable}{" .. table.concat(cols) .. "}\\toprule", header,
+      "\\midrule\\endfirsthead\\toprule", header, "\\midrule\\endhead"}
+    for _, body in ipairs(tbl.bodies) do
+      for _, row in ipairs(body.body) do lines[#lines + 1] = line(row) end
+    end
+    lines[#lines + 1] = "\\bottomrule\\end{longtable}\\endgroup"
+    return raw(table.concat(lines, "\n"))
+  end
   -- Left-align the sample description and align the quantitative columns on the right.
   local specs = {"l"}
   for col = 2, #tbl.colspecs do specs[col] = "r" end
@@ -227,5 +239,5 @@ end
 return {
   {Blocks = mark_structure},
   {BlockQuote = theorem, Para = citations, Figure = figure, Code = code_span,
-   CodeBlock = code_block, Table = table_float, Link = bibliography_citation},
+   CodeBlock = code_block, Table = table_float},
 }

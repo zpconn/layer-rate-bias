@@ -10,6 +10,7 @@ from collections import Counter
 from hashlib import file_digest, sha256
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tempfile
@@ -19,7 +20,56 @@ FORMAL = Path(__file__).resolve().parent
 STANDARD = {"propext", "Classical.choice", "Quot.sound"}
 KINDS = {"theorem", "definition", "opaque", "constructor", "inductive", "recursor"}
 PROOF_DATA = ["layer-rates/paired-runs.csv"]
-PINNED_AUDITS = ["Audit", "FollowupAudit", "CertificationAudit", "LayerRatesAudit"]
+PAPER = FORMAL.parent / "paper/paper.md"
+
+
+def paper_audit(manuscript, modules):
+    """Translate manuscript source links to imports and theorem declarations."""
+    imports, theorems = set(), set()
+    for module, number in re.findall(r"formal/(\w+)\.lean(?:#L(\d+))?", manuscript):
+        if module == "PaperAudit":
+            continue
+        if module not in modules:
+            raise ValueError(f"Unknown paper module {module}")
+        imports.add(module)
+        if not number:
+            continue
+        lines = (FORMAL / f"{module}.lean").read_text().splitlines()
+        index = int(number) - 1
+        if lines[index].lstrip().startswith("/--"):
+            while "-/" not in lines[index]:
+                index += 1
+            index += 1
+        decl = re.match(r"^(?:@\[[^\]]+\]\s+)?(?:(?:private|public|noncomputable|protected|nonrec)\s+)*"
+                        r"(theorem|lemma|def|abbrev|structure|inductive|class)\s+([\w'.]+)", lines[index])
+        if not decl:
+            raise ValueError(f"Expected a declaration at {module}.lean#L{number}")
+        if decl[1] in ("theorem", "lemma"):
+            # Project theorem links use declarations directly inside the module's namespace.
+            theorems.add(f"{module}.{decl[2]}")
+    if not theorems:
+        raise ValueError("No paper theorems found")
+    return ("module\n" + "".join(f"import all {name}\n" for name in sorted(imports))
+            + "\n/-! Axiom reports for the theorem declarations linked from the manuscript. -/\n"
+            + "".join(f"#print axioms {name}\n" for name in sorted(theorems)))
+
+
+def check_paper_closure(modules):
+    """Ensure every registered project module is reachable from the paper audit."""
+    if PAPER.is_file() and paper_audit(PAPER.read_text(), modules) != (FORMAL / "PaperAudit.lean").read_text():
+        raise ValueError("PaperAudit.lean differs from the paper links. Run verify.py --write-paper-audit.")
+    needed = set()
+    todo = ["PaperAudit"]
+    while todo:
+        current = todo.pop()
+        source = (FORMAL / f"{current}.lean").read_text()
+        for name in re.findall(r"^(?:public )?import (?:all )?(\w+)", source, re.MULTILINE):
+            if name in modules and name not in needed:
+                needed.add(name)
+                todo.append(name)
+    if set(modules) != needed:
+        raise ValueError(f"Modules outside the paper closure: {sorted(set(modules) - needed)}")
+
 
 
 def run(args, cwd, destination, *, log=False):
@@ -136,8 +186,9 @@ def verify(stage, report):
     modules = list(config["defaultTargets"])
     if set(modules) != {lib["name"] for lib in config["lean_lib"]}:
         raise ValueError("A library is missing from the default build")
+    check_paper_closure(modules)
     sources = {"lakefile.toml", "lake-manifest.json", "lean-toolchain"}
-    expected = {f"{m}.lean" for m in modules + PINNED_AUDITS}
+    expected = {f"{m}.lean" for m in modules + ["PaperAudit"]}
     def current_sources():
         return {str(p.relative_to(FORMAL)) for p in FORMAL.rglob("*.lean") if ".lake" not in p.parts}
 
@@ -157,8 +208,7 @@ def verify(stage, report):
     hashes = {source: sha256((stage / source).read_bytes()).hexdigest() for source in sorted(sources)}
     print(f"Building {len(modules)} project libraries from source", flush=True)
     run(["lake", "build", "--wfail"], stage, report / "build.log", log=True)
-    for audit in PINNED_AUDITS:
-        run(["lake", "env", "lean", "-DwarningAsError=true", f"{audit}.lean"], stage, report / f"{audit}.log")
+    run(["lake", "env", "lean", "-DwarningAsError=true", "PaperAudit.lean"], stage, report / "PaperAudit.log")
     print("Enumerating kernel declarations, including private proofs", flush=True)
     (stage / "CompleteInventory.lean").write_text(make_inventory(modules))
     run(["lake", "env", "lean", "-DwarningAsError=true", "CompleteInventory.lean"], stage, report / "declarations.tsv")
@@ -189,6 +239,7 @@ def verify(stage, report):
     for checker, log in (("leanchecker", "kernel.log"), ("leanchecker-paranoid", "paranoid.log")):
         print(f"Replaying the closed export with {checker}", flush=True)
         run(["lake", "env", checker, "--from-export", str(export)], stage, report / log, log=True)
+    check_paper_closure(modules)
     if expected != current_sources():
         raise ValueError("Lean sources were added or removed during the audit")
     for source, original in hashes.items():
@@ -220,7 +271,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, default=FORMAL / "verification")
     parser.add_argument("--export", type=Path, help="Also retain the checked proof export at this path")
+    parser.add_argument("--write-paper-audit", action="store_true", help="Update PaperAudit.lean from the paper links and exit")
     args = parser.parse_args()
+    if args.write_paper_audit:
+        modules = tomllib.loads((FORMAL / "lakefile.toml").read_text())["defaultTargets"]
+        (FORMAL / "PaperAudit.lean").write_text(paper_audit(PAPER.read_text(), modules))
+        return
     with tempfile.TemporaryDirectory(prefix="circle-lean-all-") as tmp:
         stage = Path(tmp) / "formal"
         stage.mkdir()

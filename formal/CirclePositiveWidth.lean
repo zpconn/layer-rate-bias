@@ -65,17 +65,17 @@ private theorem time_bound {N : ℕ} {τ η δ ε : ℝ} (hp : 0<τ) (hn : 0<N) 
     ((mul_le_mul_of_nonneg_right exp_est r.le).trans_eq (by field_simp))
 
 /-- For every width satisfying (1), one measurable set controls the
-training RMS and the paired population error at the stated cap. On the
+training RMS and the paired population error at every step from the stated cap onward. On the
 same set the residual decays geometrically at every iterate and the
 original parameter sequence converges to an interpolating network. -/
-theorem finite_width (n m : ℕ) (hn : 3≤n+1) (odd : Odd (n+1))
+theorem finite_width_after (n m : ℕ) (hn : 3≤n+1) (odd : Odd (n+1))
     {τ η δ ε : ℝ} (hp : 0<τ) (hη : 0<η) (stable : η*(1+τ)≤2) (hδ : 0<δ) (hδ1 : δ<1) (hε : 0<ε)
     (hw : width τ n δ ε≤sqrt m) :
     let N := n+1
     let T := cap τ N η δ ε
     ∃ E : Set (Seed m), MeasurableSet E ∧ (seedLaw m).real Eᶜ≤δ ∧ ∀ z∈E,
-      rms τ η N z T≤1/(N:ℝ)^3 ∧
-      |learnerMean τ η N z T-CircleEscapeBridge.reference N m (weight τ n) z|≤ε/(N:ℝ)^2 ∧
+      (∀ t ≥ T, rms τ η N z t≤1/(N:ℝ)^3 ∧
+        |learnerMean τ η N z t-CircleEscapeBridge.reference N m (weight τ n) z|≤ε/(N:ℝ)^2) ∧
       (∀ t, rms τ η N z t≤(1-η*(gap τ N/2))^t*R δ ∧ budget τ η N z t≤D τ N δ) ∧
       ∃ w : State m, Tendsto (iterate τ η N z) atTop (𝓝 w) ∧ ‖gridR N w‖=0 := by
   intro N T
@@ -133,9 +133,6 @@ theorem finite_width (n m : ℕ) (hn : 3≤n+1) (odd : Odd (n+1))
   have C := CircleWeightedDynamics.trajectory hn hm odd z hp hη stable wb.1
     (div_nonneg ap.le lp.le) small (div_nonneg (mul_nonneg cp.le gpos) lp.le) (div_nonneg (mul_nonneg cp.le spos) lp.le)
     kp k1 G cash drift
-  have rt := (C.1 T).1.trans (time_bound hp nn hε hδ hη k1)
-  have fit := rt.trans (min_le_left _ _)
-  have opt := rt.trans (min_le_right _ _)
   have coeff : (mult τ*signedScale N b δ/L+(1+b)*(mult τ*(36*ρ)))*(R δ/k) ≤ ε/(2*(N:ℝ)^2) := by
     rw [D_eq]
     have w : (2*(N:ℝ)^2*D τ N δ)*(mult τ*signedScale N b δ+(1+b)*36*mult τ*A τ N δ)≤L*ε := by
@@ -144,8 +141,35 @@ theorem finite_width (n m : ℕ) (hn : 3≤n+1) (odd : Odd (n+1))
     dsimp only [ρ]
     field_simp
     linarith only [w]
-  refine ⟨fit,((C.1 T).2.2.trans ?_),fun t => ⟨(C.1 t).1,(C.1 t).2.1.trans_eq D_eq⟩,C.2⟩
-  have mulb := (mul_le_of_le_one_left (show 0≤rms τ η N z T from norm_nonneg _) wb.2).trans opt
+  refine ⟨?_,fun t => ⟨(C.1 t).1,(C.1 t).2.1.trans_eq D_eq⟩,C.2⟩
+  intro t after
+  have decay := pow_le_pow_of_le_one (sub_nonneg.mpr k1)
+    (sub_le_self 1 (mul_pos hη kp).le) after
+  have rt := (C.1 t).1.trans ((mul_le_mul_of_nonneg_right decay rp.le).trans
+    (time_bound hp nn hε hδ hη k1))
+  refine ⟨rt.trans (min_le_left _ _), (C.1 t).2.2.trans ?_⟩
+  have mulb := (mul_le_of_le_one_left (show 0≤rms τ η N z t from norm_nonneg _) wb.2).trans
+    (rt.trans (min_le_right _ _))
   exact (add_le_add mulb coeff).trans_eq (by ring)
+
+/-- For every width satisfying (1), one measurable set controls the
+training RMS and the paired population error at the stated cap. On the
+same set the residual decays geometrically at every iterate and the
+original parameter sequence converges to an interpolating network. -/
+theorem finite_width (n m : ℕ) (hn : 3≤n+1) (odd : Odd (n+1))
+    {τ η δ ε : ℝ} (hp : 0<τ) (hη : 0<η) (stable : η*(1+τ)≤2) (hδ : 0<δ) (hδ1 : δ<1) (hε : 0<ε)
+    (hw : width τ n δ ε≤sqrt m) :
+    let N := n+1
+    let T := cap τ N η δ ε
+    ∃ E : Set (Seed m), MeasurableSet E ∧ (seedLaw m).real Eᶜ≤δ ∧ ∀ z∈E,
+      rms τ η N z T≤1/(N:ℝ)^3 ∧
+      |learnerMean τ η N z T-CircleEscapeBridge.reference N m (weight τ n) z|≤ε/(N:ℝ)^2 ∧
+      (∀ t, rms τ η N z t≤(1-η*(gap τ N/2))^t*R δ ∧ budget τ η N z t≤D τ N δ) ∧
+      ∃ w : State m, Tendsto (iterate τ η N z) atTop (𝓝 w) ∧ ‖gridR N w‖=0 := by
+  obtain ⟨E,meas,prob,h⟩ := finite_width_after n m hn odd hp hη stable hδ hδ1 hε hw
+  refine ⟨E,meas,prob,?_⟩
+  intro z hz
+  obtain ⟨after,allSteps,lim⟩ := h z hz
+  exact ⟨(after _ le_rfl).1,(after _ le_rfl).2,allSteps,lim⟩
 
 end CirclePositiveWidth

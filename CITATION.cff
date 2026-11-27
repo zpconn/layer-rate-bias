@@ -5,6 +5,7 @@ authors:
   - given-names: Zach
     family-names: Conn
 repository-code: "https://github.com/zpconn/layer-rate-bias"
+version: "paper-v2"
 preferred-citation:
   type: unpublished
   title: "Steering a network’s inductive bias with the hidden-layer learning rate"
@@ -12,5 +13,4 @@ preferred-citation:
     - given-names: Zach
       family-names: Conn
   year: 2026
-  notes: "Zach Conn, investigator. OpenAI Codex and Anthropic Claude, research agents."
-  url: "https://github.com/zpconn/layer-rate-bias/blob/main/paper/paper.pdf"
+  url: "https://github.com/zpconn/layer-rate-bias/releases/tag/paper-v2"

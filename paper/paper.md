@@ -1,14 +1,26 @@
 # Steering a network’s inductive bias with the hidden-layer learning rate
 
-**Investigator** Zach Conn
+**Author** Zach Conn
 
-**Research agents** OpenAI Codex and Anthropic Claude
+**Abstract.** Can the initial predictions of a network tell us which of two learning rates will yield the larger population mean after training? For two-layer ReLU networks trained on an odd grid of $N$ points on the circle, the initial grid deficit $X$ predicts both the ordering and its size. Starting both copies from the same Gaussian seed and changing the hidden-layer rate from $1/2$ to $2$ gives a slow-minus-fast gap of $(\pi^2/40)X/N^2+o_p(N^{-2})$ at a common deterministic endpoint. The kernel calculation gives an exact positive coefficient $c_N$ for every odd $N\ge3$. For a smaller GD step we prove a finite-grid guarantee at widths proportional to $N^{16}$. The nonlinear unit-step and flow guarantees at this endpoint use width $N^{32}$ and very large sufficient grid sizes. Flow tracks its reference in mean square, while rare seeds make the corresponding fixed-step mean-square prediction error diverge. At $N=3$, three initial widths give a slope shortfall near $1.45/\sqrt m$. A six-width sweep with 200 seeds yields an empirical exponent of $0.469$ (95% joint-bootstrap interval $0.452$–$0.485$). We formalize the training theorems in Lean 4 with Mathlib and separately check arithmetic on the frozen numerical records.
 
-**Abstract.** We study how the relative learning rates of two layers affect a network’s predictions between its training points. Two networks with one ReLU hidden layer start from the same Gaussian weights and train on the labels $1+\cos u$ at $N$ equally spaced angles $u$ on the unit circle, with $N$ odd. Fix the readout learning rate and set the hidden-layer rate to one half or twice that rate. Let $X$ be one minus the initial mean prediction on the grid. For both full-batch gradient descent and gradient flow, the final difference in uniform means around the circle, slower copy minus faster copy, is $(\pi^2/40)X/N^2+o_p(N^{-2})$. At width $N^{32}$ and a common deterministic horizon of order $N^2\log N$, both copies fit the grid and the sign prediction is correct with probability tending to one. For flow, the expected difference is $\pi^2/(40N^2)+O(N^{-4})$. For unit-step gradient descent, rare initializations make the mean-square prediction error diverge even for the unscaled difference. Both theorems are formalized entirely in Lean.
+## Introduction {.unnumbered}
+
+How much does fitting the labels tell us about the network between training points? For the circle grid studied here the answer can be made exact. At every odd $N\ge3$ and width $m\ge N+5$, for **each** real $s$ there are network parameters that interpolate the labels exactly and have population mean $s$. There is also a probabilistic statement for equal-rate GD with Gaussian initialization. For any finite search cap and positive fit tolerance, conditional on hitting the tolerance, the population mean at the first hit has support on the entire real line. Thus fit alone leaves the mean undetermined. The paired experiment asks what can be predicted when the rates change and the seed is held fixed. [Exact interpolation](../formal/CircleFitSupport.lean#L63) · [First-hit support](../formal/CircleFitSupport.lean#L244)
+
+Practitioners choose different learning rates for different parts of a model. ULMFiT fine-tunes earlier and later layers at different rates, LARS adapts updates to layer norms, and LoRA+ assigns different rates to the two factors of a low-rank update [@howard2018; @you2017; @hayou2024]. Two-timescale theory also studies how relative layer speeds affect convergence [@marion2023]. Here one multiplier changes in an otherwise identical pair. We measure its effect on the fitted function away from the data.
+
+We use **inductive bias** to mean the choice of extension away from the grid. Once the grid is fit, the discrepancy between the circular average and the target average comes from the behavior between sample points. **Statistical bias** is the signed error of the expected prediction, averaged over initialization. A pair can have a predictable ordering for a given seed even when neither copy has a small absolute error for that seed.
+
+- For every odd grid, the two kernel interpolants transfer different, exactly calculable fractions of the initial grid deficit into their circular means. The slower hidden layer transfers more.
+- At every odd $N\ge3$, explicit GD step and width choices yield an error bound that holds at every sufficiently late common step. At the common horizon for unit-step GD and flow, the initial deficit predicts the sign and leading magnitude of this gap for the trained networks with high probability. The flow statement covers every measurable selection of Clarke solutions.
+- Gradient flow also tracks in $L^2$. Unit-step descent exhibits a different tail behavior even though its typical seeds obey the prediction. We give machine-checked proofs and compare the finite-grid formula with paired numerical runs.
+
+![At $N=3$, the constant and $\cos(2Nu)$ agree at all three nodes. The cosine averages to zero around the circle. For a unit residual at every node, both kernel corrections fit the grid. Their circular means differ because the two kernels assign different weights to the aliases.](kernel-alias.png)
+
+**Regime.** The new GD guarantee applies at every odd $N\ge3$, with a step at most $2/3$ for the benchmark pair. Its sufficient width is $1.44\times10^{18}N^{16}$, still about $6.2\times10^{25}$ neurons at $N=3$. The kernel slope is exact for every odd $N\ge3$. At the common horizon $H$, the sufficient grid cutoff for simultaneous fitting and tracking with unit-step GD is $4^{32}$, so the first admissible odd grid has $4^{32}+1$ points and width greater than $2^{2048}\simeq3.23\times10^{616}$. The paired flow event starts at $N=36{,}865$, giving $m\simeq1.35\times10^{146}$. By comparison, $3^{32}\simeq1.85\times10^{15}$, while the original three-point experiments used widths up to $32{,}768$. The GD cutoff arises when the proof bounds the terminal residual by $4N^{-97/32}$ and requires this to be at most $N^{-3}$. [GD horizon](../formal/CirclePairedGDClock.lean#L52) · [GD event](../formal/CirclePairedGDTypical.lean#L208) · [Flow event](../formal/CirclePairedTheorem.lean#L41)
 
 ## Model and training dynamics
-
-Two networks can fit the same observations and still have different population means. Can one predict the sign and size of the difference before training begins? We consider a pair that shares its architecture, data, and initialization. The only training choice that differs within the pair is the hidden-layer learning rate.
 
 > **Definition 1.1 (Network and means).** Fix an odd $N\ge3$, a positive width $m$, and $u_i=2\pi i/N$ for $0\le i<N$. At angle $u$ the input is $x(u)=(\cos u,\sin u)$ and the label is $y(u)=1+\cos u$. Write $Q_N$ for the arithmetic mean on the grid and $Q$ for the uniform angular mean. For readouts $a_j\in\mathbb{R}$ and hidden weights $w_j\in\mathbb{R}^2$, set
 >
@@ -34,6 +46,8 @@ The labels have mean $Q_Ny=Qy=1$. For any trained or untrained network the popul
 
 Global flows admit a Borel selection as a function of the seed. All flow conclusions hold for every measurable selection of a solution for each copy. [Simultaneous update](../formal/CircleWeightedStep.lean#L23) · [Global Clarke flow](../formal/CircleFlowConstruction.lean#L75)
 
+For $\tau>0$, write $w_j=\sqrt\tau\,v_j$ and initialize $v_j$ with covariance $I/\tau$. Positive homogeneity gives $f=(\sqrt\tau/\sqrt m)\sum_j a_j[v_j^\top x]_+$. In these coordinates the chain rule gives $\partial_{v_j}L=\sqrt\tau\,\partial_{w_j}L$. Plain descent on $(a,v)$ therefore sends $a_j$ to $a_j-\eta\partial_{a_j}L$ and $w_j$ to $w_j-\eta\tau\partial_{w_j}L$. The same linear change of variables carries admissible flow paths in both directions, including at gate crossings. This reparametrization preserves the initial function when the underlying $w_j$ draw is shared. It explains why the hidden-gradient term in the tangent kernel is weighted by $\tau$ [@williams2019; @yang2021]. [Scaled output](../formal/CircleReparametrization.lean#L27) · [GD step](../formal/CircleReparametrization.lean#L54) · [Flow correspondence](../formal/CircleReparametrization.lean#L91) · [Transformed seed law](../formal/CircleReparametrization.lean#L114)
+
 For the paired comparison, fix the width $m=N^{32}$ and the deterministic horizon
 
 $$
@@ -42,91 +56,21 @@ $$
 
 Within a pair, take $H$ GD updates with $\eta=1$, or evolve both flows to time $H$. Write $Y_\tau=Qf_{\tau,H}$ and $\Delta=Y_{1/2}-Y_2$. A run **fits** if $\|r_H\|_N\le N^{-3}$. A **wrong ordering** is the event $\Delta X\le0$, with a tie counted as a miss. All probabilities and $L^p$ norms of random variables use the Gaussian seed law. [Training horizon](../formal/CircleFlowTracking.lean#L347) · [Ordering event](../formal/CirclePairedOrdering.lean#L42)
 
-## Main results
-
-Let $k_\tau$ be the expectation at initialization of the tangent kernel, with its readout and hidden terms weighted by one and $\tau$, respectively. For its column at angle zero put $b_{\tau,N}=Qk_\tau(\cdot,0)/Q_Nk_\tau(\cdot,0)$. Interpolating with this fixed kernel from $f_0$ gives the **reference population mean** $Z_\tau=Qf_0+b_{\tau,N}X$. For the reference pair the scaled difference satisfies $N^2(Z_{1/2}-Z_2)=c_NX$ exactly, where $c_N=N^2(b_{1/2,N}-b_{2,N})$. Proposition 4.2 and Corollary 4.3 give $c_N>0$ and $c_N=\pi^2/40-\pi^4/(1600N^2)+O(N^{-4})$. All limits below are along odd $N\to\infty$. [Proposition 4.2 and Corollary 4.3](#the-finite-grid-coefficient)
-
-> **Theorem 1 (discrete GD).** For all sufficiently large odd $N$, there exists an event of probability at least $1-2/\sqrt N$ on which both copies fit and
->
-> $$
-> \left|N^2\Delta-c_N X\right|\le10N^{-33/32}.
-> $$
->
-> The probability of a wrong ordering is $O(N^{-1/2})$, and $N^2\Delta-(\pi^2/40)X\to0$ in probability. For every bounded deterministic sequence $d_N$, including $c_N$ and $\pi^2/40$, the unscaled mean-square error satisfies
->
-> $$
-> \mathbb{E}\!\left[\left(\Delta-\frac{d_N X}{N^2}\right)^2\right]\longrightarrow+\infty .
-> $$
-
-**Proof idea.** On typical seeds each trajectory tracks its kernel reference. The references differ by exactly $c_N X/N^2$. A second argument finds rare common seeds for which the fast network’s output outgrows the slow network’s by enough to dominate the second moment.
-
-**Proof.** Lemma 5.1 gives one event per rate. Intersecting them costs at most $2/\sqrt N$ in probability. Each copy fits there and each endpoint differs from its reference by at most $5N^{-97/32}$. Subtracting the two endpoints and multiplying by $N^2$ gives $10N^{-33/32}$. Proposition 5.2 applies the Gaussian bound for $\Pr(|X|\le N^{-1/2})$ to obtain the ordering estimate, and uses $\sup_N\mathbb{E}X^2\le3/2$ and $c_N\to\pi^2/40$ to pass to the limiting slope in probability. For the second moment, $H/\log N\to\infty$, so $H\ge60\log N$ eventually. Proposition 6.2 at $T=H$ gives the stated divergence for every bounded $d_N$. Each expectation is finite at finite $N$. [Lemma 5.1](#a-bound-for-the-entire-trajectory) · [Proposition 5.2](#the-paired-endpoint) · [Proposition 6.2](#gaussian-mass-and-squared-prediction-error)
-
-$\square$
-
-**Lean proof.** [Paired discrete gradient descent](../formal/CirclePairedGDTheorem.lean#L59) · [All bounded coefficient sequences](../formal/CirclePairedGDClocksTail.lean#L49) · [Finite endpoint moments](../formal/CirclePairedGDIntegrable.lean#L156)
-
-The asymptotic behavior of the signed mean $\mathbb{E}[\Delta]$ for unit-step GD remains open.
-
-> **Theorem 2 (gradient flow).** For all sufficiently large odd $N$, there exists an event of probability at least $1-96N^{-158}$ on which both copies fit and $|N^2\Delta-c_NX|=O(N^{-13}\log N)$. The probability of a wrong ordering is $O(N^{-13})$. Over all seeds,
->
-> $$
-> \left\|\Delta-\frac{c_N X}{N^2}\right\|_{L^2}=O(N^{-15}),
-> \qquad
-> \mathbb{E}[\Delta]=\frac{\pi^2}{40N^2}+O(N^{-4}).
-> $$
-
-**Proof idea.** Loss dissipation controls even exceptional trajectories, so the two tracking errors can be subtracted in $L^2$. For the sign, conditioning on a random direction in readout space bounds the probability that the initial deficit is small compared with the error for that same seed.
-
-**Proof.** Proposition 7.2 supplies the common fitting and tracking event. For each rate let $e_\tau=Y_\tau-Z_\tau$. Since $\Delta-c_NX/N^2=e_{1/2}-e_2$ exactly, its $L^2$ norm is at most $\|e_{1/2}\|_2+\|e_2\|_2=O(N^{-15})$ by the same proposition. Proposition 8.1 gives the $O(N^{-13})$ ordering error. Conditional on the hidden weights, the initial readouts are centered, so $\mathbb{E}X=1$. Taking expectations in the identity yields $|\mathbb{E}\Delta-c_N/N^2|=O(N^{-15})$ by Cauchy–Schwarz. Inserting the expansion of $c_N$ gives the signed mean formula. [Proposition 7.2](#projection-fitting-and-exceptional-seeds) · [Proposition 8.1](#ordering-across-all-seeds) · [Corollary 8.3](#the-limiting-coefficient-and-the-signed-shift)
-
-$\square$
-
-**Lean proof.** [Joint fitting and tracking](../formal/CirclePairedTheorem.lean#L41) · [Unconditional tracking and ordering](../formal/CirclePairedTheorem.lean#L209) · [Signed expectation](../formal/CirclePairedTheorem.lean#L264) · [Second-order RMS constant](../formal/CirclePairedSecondOrder.lean#L93)
-
-> **Corollary 2.1 (Prediction from initialization).** For either training rule,
->
-> $$
-> Y_{1/2}-Y_2=\frac{\pi^2}{40}\frac{1-Q_N f_0}{N^2}+o_p(N^{-2}).
-> $$
->
-> Fix $0<\gamma\le B<\infty$. On the corresponding theorem’s fitting and tracking event, whenever $\gamma\le |X|\le B$, the sign of $\Delta$ is the sign of $X$ and $|\Delta|$ has order $N^{-2}$ for all sufficiently large $N$. The two fitted predictions differ by at most $2N^{-3}$ in grid RMS.
-
-**Proof idea.** A deficit bounded away from zero gives the reference gap a fixed sign and a size bounded below on the $N^{-2}$ scale. The tracking error is smaller on this scale.
-
-**Proof.** Theorem 1 gives the expansion for GD. For flow, Theorem 2 gives $N^2\Delta-c_NX\to0$ in $L^2$. Since $\|X\|_2\le\sqrt{3/2}$ and $c_N\to\pi^2/40$, replacing $c_N$ by its limit preserves $L^2$ convergence and hence convergence in probability. On the fitting and tracking event of either theorem, $|N^2\Delta-c_NX|\le c_N\gamma/2$ eventually because the left side is uniformly $o(1)$ there and $c_N$ tends to a positive constant. For $\gamma\le|X|\le B$ this forces equal signs and bounds $N^2|\Delta|$ between $c_N\gamma/2$ and $c_N(B+\gamma/2)$. The grid RMS discrepancy is at most the sum of the two fitting errors.
-
-$\square$
-
-**Lean proof.** [Discrete limiting prediction](../formal/CirclePairedGDTheorem.lean#L47) · [Flow limiting prediction](../formal/CirclePairedTheorem.lean#L221) · [Discrete joint event](../formal/CirclePairedGDTypical.lean#L208) · [Fixed-band flow bounds](../formal/CirclePairedTheorem.lean#L185)
-
-## Finite-width experiments
-
-We tested the finite-grid slope by numerically integrating the two gradient flows at $N=3$ and widths 512, 8,192 and 32,768, and at $N=5$ and width 8,192. Each design has 48 ordinary Gaussian pairs and 48 independent pairs sampled conditional on $X<0$ by rejecting draws before training. This second group tests the direction in which the slower network is predicted to finish *lower*.
-
-The integrator is Heun’s explicit trapezoidal rule with step 0.25, recalculating both layers’ gradients and gates at the provisional state. The measured endpoints are time 160 for $N=3$ and 512 for $N=5$. The corresponding theorem horizons are 1,027 and 3,735. The plotted width is also much smaller than $3^{32}$. All the observations in the figure concern the flow integrator. [Integrator and data](../layer-rates/README.md) · [Exact horizon calculations](../formal/CircleFiniteHorizons.lean#L62)
-
-![The 96 pairs at three grid points and width 32,768. The horizontal coordinate is the initial deficit. The vertical coordinate is the observed slow-minus-fast population gap at time 160, multiplied by nine. The line has the predicted finite-grid slope 0.239159. The right panel enlarges the neighborhood of a tie.](paired-ordering.png)
-
-On ordinary draws the deficit predicts 48 of 48 orderings. Always predicting that the slower network finishes higher scores 45 of 48. On the independent sample with $X<0$, the faster network finishes higher in 46 of 48. Both misses have initial grid means within 0.005 of one. For one ordinary seed with $Q_Nf_0=-0.06839$, the predicted scaled gap is $+0.25551$ and the measured gap is $+0.25300$. At $Q_Nf_0=1.11761$, the corresponding values are $-0.02813$ and $-0.02871$. [Machine-checked sign counts](../formal/CirclePairedData.lean#L114)
-
-**Table 1.** Ordering and magnitude of the scaled population gap $N^2\Delta$ at $N=3$, width 32,768, and flow time 160. The interval is a 95% bootstrap interval for the slope. RMS errors use the prediction $c_3X$.
-
-| Sampling law | Correct orderings | Slope (95% interval) | RMS error |
-| --- | --- | --- | --- |
-| Gaussian | 48/48 | 0.2310 (0.2299, 0.2321) | 0.00931 |
-| Gaussian conditional on $X<0$ | 46/48 | 0.2323 (0.2277, 0.2363) | 0.00428 |
-
-The slope fitted through the origin divides the sum of products of deficit and scaled gap by the sum of squared deficits. Each interval resamples complete pairs 4,096 times within its group. Both intervals lie below the theoretical $c_3$. The sign prediction therefore succeeds on most pairs despite a systematic difference in the fitted slope. At width 512 the corresponding slopes are 0.1760 and 0.2032. [Measurements by width](../layer-rates/paired-summary.csv)
-
-Across all 384 primary pairs, the recorded final grid RMS errors are below $1.43\times10^{-12}$. The continuation estimate for an exact flow *starting at a computed endpoint* bounds the remaining scaled change through $H$ by $8\times10^{-10}$. It leaves the preceding numerical integration error to be assessed separately. Halving the time step on the refinement sample changes the scaled gap by less than 0.000090 in the plotted design. All 19 ordering misses across the four designs persist at step 0.0625. Lean checks the reported residual and continuation inequalities from the frozen decimal records. [Checked residuals and allowances](../formal/CirclePairedResidualData.lean) · [Refinement protocol](../layer-rates/README.md)
+| Notation | Meaning |
+| --- | --- |
+| $N,m,H$ | Grid size, hidden width and common training horizon |
+| $Q_N,Q$ | Uniform averages on the grid and around the circle |
+| $X$ | Initial grid deficit, $Q_N(y-f_0)$ |
+| $b_{\tau,N},Z_\tau$ | Kernel quadrature weight summed over the grid, and reference population mean |
+| $Y_\tau,\Delta$ | Trained population mean and the slow-minus-fast gap |
+| $c_N$ | Exact slope of the scaled reference gap against $X$ |
 
 ## The finite-grid coefficient
 
 Let $K_\tau$ denote the grid operator of the initialization-averaged tangent kernel,
 $(K_\tau r)_i=N^{-1}\sum_j k_\tau(u_i,u_j)r_j$. The factor $1/N$ comes from the training loss. For $h(s)=[\cos s]_+$, write $h_k=(2\pi)^{-1}\int_{-\pi}^{\pi} h(s)e^{-iks}\,ds$.
 
-> **Lemma 4.1 (Spectrum of the sampled tangent kernel).** Fix an odd $N\ge3$ and $0<\tau\le2$. The Fourier coefficient of $k_\tau(\cdot,0)$ at integer $k$ is $a_{\tau,k}=[2+\tau(1+k^2)]|h_k|^2$. On the grid character $j\mapsto e^{i\ell u_j}$, the eigenvalue of $K_\tau$ is
+> **Lemma 2.1 (Spectrum of the sampled tangent kernel).** Fix an odd $N\ge3$ and $0<\tau\le2$. The Fourier coefficient of $k_\tau(\cdot,0)$ at integer $k$ is $a_{\tau,k}=[2+\tau(1+k^2)]|h_k|^2$. On the grid character $j\mapsto e^{i\ell u_j}$, the eigenvalue of $K_\tau$ is
 >
 > $$
 > \lambda_{\tau,\ell}=\sum_{k\equiv\ell\pmod N}a_{\tau,k},
@@ -162,7 +106,9 @@ A=2\sum_{j\ge1}\frac{1}{(k_j^2-1)^2},
 B=2\sum_{j\ge1}\frac{k_j^2}{(k_j^2-1)^2}.
 $$
 
-> **Proposition 4.2 (Exact finite-grid prediction).** For every odd $N\ge3$ and every continuous initial predictor $f_0$, the two fixed-kernel interpolants satisfy $N^2(Z_{1/2}-Z_2)=c_N X$, where $X=1-Q_N f_0$ and
+Write $Z_\tau$ for the population mean of the fixed-kernel interpolant obtained by starting at $f_0$ and fitting the grid.
+
+> **Proposition 2.2 (Exact finite-grid prediction).** For every odd $N\ge3$ and every continuous target $y$ and continuous initial predictor $f_0$, the two fixed-kernel interpolants satisfy $N^2(Z_{1/2}-Z_2)=c_N X$, where $X=Q_N(y-f_0)$ and
 >
 > $$
 > c_N=\frac{(3/10)N^2B}{(1+A+B/5)(1+A+B/2)}>0.
@@ -172,9 +118,9 @@ $$
 
 **Proof idea.** A kernel update changes the population and grid means in a fixed ratio. To find that ratio, compare the constant coefficient on the whole circle with the sum of all the frequencies that look constant on the grid.
 
-**Proof.** A kernel column has population mean $a_{\tau,0}$ and grid mean $\lambda_{\tau,0}$. For the unit-step kernel iteration $f_t^{\mathrm{ker}}$ started at $f_0$, write $r_t$ for the grid residual. One update changes the population mean by $-a_{\tau,0}Q_Nr_t$ and the grid mean by $-\lambda_{\tau,0}Q_Nr_t$. Hence $Q f_t^{\mathrm{ker}}-b_{\tau,N}Q_N f_t^{\mathrm{ker}}$ is invariant, where $b_{\tau,N}=a_{\tau,0}/\lambda_{\tau,0}$. By Lemma 4.1, $\|r_t\|_N\le(1-g_\tau)^t\|r_0\|_N$, so $Q_N f_t^{\mathrm{ker}}\to Q_Ny=1$. The limiting population mean is $Z_\tau=Qf_0+b_{\tau,N}X$. At each finite step the same invariant gives $Q f_t^{\mathrm{ker}}-Z_\tau=b_{\tau,N}Q_N r_t$. Thus every residual component with zero grid average makes zero contribution to this population-mean error.
+**Proof.** A kernel column has population mean $a_{\tau,0}$ and grid mean $\lambda_{\tau,0}$. For the unit-step kernel iteration $f_t^{\mathrm{ker}}$ started at $f_0$, write $r_t$ for the grid residual. One update changes the population mean by $-a_{\tau,0}Q_Nr_t$ and the grid mean by $-\lambda_{\tau,0}Q_Nr_t$. Hence $Q f_t^{\mathrm{ker}}-b_{\tau,N}Q_N f_t^{\mathrm{ker}}$ is invariant, where $b_{\tau,N}=a_{\tau,0}/\lambda_{\tau,0}$. By Lemma 2.1, $\|r_t\|_N\le(1-g_\tau)^t\|r_0\|_N$, so $Q_N f_t^{\mathrm{ker}}\to Q_Ny$. The limiting population mean is $Z_\tau=Qf_0+b_{\tau,N}X$. At each finite step the same invariant gives $Q f_t^{\mathrm{ker}}-Z_\tau=b_{\tau,N}Q_N r_t$. Thus every residual component with zero grid average makes zero contribution to this population-mean error.
 
-An odd multiple of $N$ has magnitude at least three and zero Fourier coefficient. The only nonzero aliases of the constant mode with nonvanishing weight are therefore $\pm k_j$. For these frequencies $|h_{k_j}|^2=1/[\pi^2(k_j^2-1)^2]$. Dividing the alias sum in Lemma 4.1 by $a_{\tau,0}=(2+\tau)/\pi^2$ gives
+An odd multiple of $N$ has magnitude at least three and zero Fourier coefficient. The only nonzero aliases of the constant mode with nonvanishing weight are therefore $\pm k_j$. For these frequencies $|h_{k_j}|^2=1/[\pi^2(k_j^2-1)^2]$. Dividing the alias sum in Lemma 2.1 by $a_{\tau,0}=(2+\tau)/\pi^2$ gives
 
 $$
 b_{\tau,N}^{-1}=1+A+\frac{\tau}{2+\tau}B .
@@ -186,14 +132,16 @@ $\square$
 
 **Lean proof.** The constant-mode and population row identities identify the interpolation weight. The exact difference and its strict sign hold for any common initial population and grid means. [`constant_alias_eq`](../formal/CircleGridSpectrum.lean#L356) · [`cartesian_integrated_row`](../formal/CircleGridSpectrum.lean#L524) · [`population_row_factorization`](../formal/CircleGridSpectrum.lean#L550) · [`weight_exact`](../formal/CircleFiniteCoefficient.lean#L88) · [`weight_difference`](../formal/CircleFiniteCoefficient.lean#L100) · [`paired_reference_exact`](../formal/CircleFiniteCoefficient.lean#L118) · [`paired_reference_slow_wins_iff`](../formal/CircleFiniteCoefficient.lean#L125)
 
-> **Corollary 4.3 (Second-order coefficient).** On every odd grid with $N\ge3$,
+For an arbitrary vector of label residuals, $Z_\tau-Qf_0=b_{\tau,N}Q_N(y-f_0)$ is a kernel quadrature rule. Rotation by one grid spacing permutes its nodes while leaving the kernel and integration measure invariant, so each node gets the same weight $b_{\tau,N}/N$ [@karvonen2018]. For each nonzero even alias $k$ of the constant, its weight relative to that constant is $[2+\tau(1+k^2)]/[(2+\tau)(k^2-1)^2]$. Increasing $\tau$ increases this ratio and reduces the fraction of the residual transferred to the population mean.
+
+> **Corollary 2.3 (Second-order coefficient).** On every odd grid with $N\ge3$,
 >
 > $$
 > \left|c_N-\left(\frac{\pi^2}{40}-\frac{\pi^4}{1600N^2}\right)\right|
 > \le \frac{400}{N^4}.
 > $$
 
-**Proof idea.** The first two terms in $B$ come from the inverse squares and inverse fourth powers of the even aliases. To second order, one must also account for the appearance of $B$ in the denominator of Proposition 4.2.
+**Proof idea.** The first two terms in $B$ come from the inverse squares and inverse fourth powers of the even aliases. To second order, one must also account for the appearance of $B$ in the denominator of Proposition 2.2.
 
 **Proof.** Put $t=N^{-2}$ and $z_j=(2Nj)^{-2}=t/(4j^2)$. The summands of $A$ and $B$ are $2z_j^2/(1-z_j)^2$ and $2z_j/(1-z_j)^2$. For $0\le z\le1/4$,
 
@@ -216,39 +164,246 @@ $$
 W-(b+gt)D=t^2\bigl[e-gp-(b+gt)q\bigr].
 $$
 
-The absolute value of the bracket is at most $3+4\cdot2+6\cdot40$, since $|g|\le4$ and $|b+gt|\le6$. Proposition 4.2 gives $c_N=(3/10)W/D$. Dividing the identity by $D$ and multiplying by $3/10$ bounds the error by $400t^2$. Finally $(3/10)b=\pi^2/40$ and $(3/10)g=-\pi^4/1600$, giving the claimed expansion.
+The absolute value of the bracket is at most $3+4\cdot2+6\cdot40$, since $|g|\le4$ and $|b+gt|\le6$. Proposition 2.2 gives $c_N=(3/10)W/D$. Dividing the identity by $D$ and multiplying by $3/10$ bounds the error by $400t^2$. Finally $(3/10)b=\pi^2/40$ and $(3/10)g=-\pi^4/1600$, giving the claimed expansion.
 
 $\square$
 
 **Lean proof.** The alias estimates control the remainders before division by the positive denominator. [`coefficient_second_order`](../formal/CircleFiniteCoefficient.lean#L231) · [`aliases`](../formal/CircleCoefficientRemainder.lean#L56) · [`uniform_remainder`](../formal/CircleCoefficientRemainder.lean#L91)
 
+Set $\theta=\pi/(2N)$. The alias sums $A_N=A$ and $B_N=B$ in the exact coefficient can be evaluated without truncating a Fourier series,
+$$
+ A_N=-1+\tfrac12\theta\cot\theta+\tfrac12\theta^2\csc^2\theta,
+ \qquad B_N=\tfrac12\theta^2\csc^2\theta-\tfrac12\theta\cot\theta.
+$$
+Substituting in $b_{r,N}=[1+A_N+r B_N/(2+r)]^{-1}$ gives the following values of $c_N(1/2,2)$, rounded to ten places. [Alias sums](../formal/CircleClosedForms.lean#L125) · [Constant mode](../formal/CircleClosedForms.lean#L162) · [Exact weight](../formal/CircleFiniteCoefficient.lean#L88)
+
+The closed form also gives the higher-order expansion
+$$
+ c_N=\frac{\pi^2}{40}-\frac{\pi^4}{1600N^2}
+       -\frac{31\pi^6}{448000N^4}
+       +\frac{13\pi^8}{69120000N^6}+O(N^{-8}).
+$$
+The absolute fourth-order coefficient is about $0.0665$. Corollary 2.3 bounds the entire remainder by $400/N^4$ uniformly, which at $N=3$ exceeds the coefficient itself. For that grid the exact formula gives $0.2391588734$. [Higher-order expansion](../formal/CircleCoefficientExpansion.lean#L111)
+
+**Table 1.** Finite-grid coefficients from the closed form, with their large-grid limit.
+
+| $N$ | $c_N$ | $N$ | $c_N$ | $N$ | $c_N$ |
+|---:|---:|---:|---:|---:|---:|
+| 3 | 0.2391588734 | 9 | 0.2459783609 | 21 | 0.2466017166 |
+| 5 | 0.2441985927 | 11 | 0.2462324212 | 31 | 0.2466766866 |
+| 7 | 0.2454699576 | 15 | 0.2464682153 | $\infty$ | 0.2467401100 |
+
+> **Proposition 2.4 (Fourier coefficients of the kernel interpolant).** For an arbitrary continuous target $y$, set $r_j=y(u_j)-f_0(u_j)$ and $\widehat r_\ell=N^{-1}\sum_j r_j e^{-i\ell u_j}$. On an odd grid $N\ge3$ and for $1/2\le\tau\le2$, the correction from tangent-kernel interpolation has, at every integer frequency $k$, coefficient
+> $$
+>  \widehat{(f_{\rm ref}-f_0)}(k)
+>    =\frac{a_{\tau,k}}{\lambda_{\tau,\ell}}\widehat r_\ell,
+>  \qquad \ell=k\bmod N,\quad \lambda_{\tau,\ell}=\sum_{h\equiv\ell\bmod N}a_{\tau,h}.
+> $$
+
+**Proof.** The grid convolution is diagonal in the discrete Fourier basis, and a kernel section centered at $u_j$ has coefficient $e^{-iku_j}a_{\tau,k}$. Solving the grid equations supplies the reciprocal eigenvalue. At $k=0$ this is the equal-weight quadrature formula $Qf_{\rm ref}=Qf_0+b_{\tau,N}Q_N(y-f_0)$. Thus two rate choices differ by $(b_{\tau,N}-b_{\sigma,N})Q_N(y-f_0)$ even when $Q_Ny\ne Qy$. To compare a single copy to the true target mean, write $Qf_{\rm ref}-Qy=(Qf_0-Q_Nf_0)+(b_{\tau,N}-1)Q_N(y-f_0)+(Q_Ny-Qy)$. The last term is the target's quadrature error. [All Fourier modes](../formal/CircleFourierInterpolant.lean#L39) · [Mean for a general target](../formal/CircleFourierInterpolant.lean#L92)
+
+$\square$
+
+For $1+\cos u$, the three target modes $0,1,-1$ occupy distinct residues on every odd grid $N\ge3$. The target has $Q_Ny=Qy=1$, $|y|\le2$ and $Q_N y^2=3/2$. The nonlinear training bounds use the specified labels in controlling the initial residual and its Fourier components. The kernel formula for a general target does not establish those estimates for other labels. At equal rates the development also identifies the first cosine amplitude $2Q(f\cos u)$ of an actual network with $(2\sqrt m)^{-1}\sum_j a_j w_{j,1}$, constructs its kernel interpolant and computes the first two moments of its reference amplitude. Nonlinear tracking of the entire interpolant remains open. [Cosine amplitude](../formal/CircleFirstCosine.lean#L51) · [Interpolating solution](../formal/CircleFirstCosineReference.lean#L444) · [Reference moments](../formal/CircleFirstCosineReference.lean#L263)
+
+## Main results
+
+We now compare the actual training trajectories with the kernel reference. Their initial deficit is the same, so subtracting the two reference means gives the exact scaled gap $c_NX$. All limits below are along odd $N\to\infty$. [Finite-grid coefficient](#the-finite-grid-coefficient)
+
+> **Theorem 1 (Common endpoint for finite-grid GD).** For a hidden multiplier $r>0$, write $M_r(N)=(\lceil 3\cdot10^8(\max(1,r)/r)^2\rceil N^8)^2$. Choose $0<\tau<\sigma$ and a base step $0<\eta\le2/(1+\sigma)$. At every odd $N\ge3$ and every common width $m\ge\max(M_\tau,M_\sigma)$, there is a measurable event of probability at least $1-2/N$ on which both copies fit to RMS $N^{-3}$ and
+> $$
+> \left|N^2(Y_\tau(t)-Y_\sigma(t))-c_N(\tau,\sigma)X\right|\le 2/N,
+> \qquad c_N(\tau,\sigma)=N^2(b_{\tau,N}-b_{\sigma,N}).
+> $$
+> Here $Y_r(t)$ denotes the population mean after update $t$. These bounds hold simultaneously at every integer step from the larger of the two individual deadlines onward. The deadline for $r$ is at most $\lceil192 N^2\log N/(\eta r)\rceil$. In particular the rates $1/2$ and $2$ admit the common width $1.44\cdot10^{18}N^{16}$ and every step $0<\eta\le2/3$. This gives a finite-grid result for a smaller base step than the unit-step benchmark. Its error bound at small $N$ can exceed the signal. [Single-rate deadline](../formal/CirclePositiveSchedule.lean#L121) · [Persistence past the deadline](../formal/CirclePositiveWidth.lean#L71) · [Common-seed GD](../formal/CircleRateDial.lean#L53)
+
+**Proof.** Each single-rate theorem also gives convergence of the parameters to an exact grid interpolant on its good event. The one-rate bound gives geometric decay of the training residual and a uniform bound on the total residual accumulated through each step. The former decreases after the deadline and the latter controls the error in the signed population-minus-grid update. Taking the intersection of the two single-rate events costs at most $2/N$ in probability under the shared seed law.
+
+$\square$
+
+> **Theorem 2 (discrete GD).** For all sufficiently large odd $N$, there exists an event of probability at least $1-2/\sqrt N$ on which both copies fit and
+>
+> $$
+> \left|N^2\Delta-c_N X\right|\le10N^{-33/32}.
+> $$
+>
+> The probability of a wrong ordering is $O(N^{-1/2})$, and $N^2\Delta-(\pi^2/40)X\to0$ in probability. For every bounded deterministic sequence $d_N$, including $c_N$ and $\pi^2/40$, the unscaled mean-square error satisfies
+>
+> $$
+> \mathbb{E}\!\left[\left(\Delta-\frac{d_N X}{N^2}\right)^2\right]\longrightarrow+\infty .
+> $$
+
+**Proof idea.** On typical seeds each trajectory tracks its kernel reference. The references differ by exactly $c_N X/N^2$. A second argument finds rare common seeds for which the fast network’s output outgrows the slow network’s by enough to dominate the second moment.
+
+**Proof.** Lemma 5.1 gives one event per rate. Intersecting them costs at most $2/\sqrt N$ in probability. Each copy fits there and each endpoint differs from its reference by at most $5N^{-97/32}$. Subtracting the two endpoints and multiplying by $N^2$ gives $10N^{-33/32}$. Proposition 5.2 applies the Gaussian bound for $\Pr(|X|\le N^{-1/2})$ to obtain the ordering estimate, and uses $\sup_N\mathbb{E}X^2\le3/2$ and $c_N\to\pi^2/40$ to pass to the limiting slope in probability. For the second moment, $H/\log N\to\infty$, so $H\ge60\log N$ eventually. Proposition 6.2 at $T=H$ gives the stated divergence for every bounded $d_N$. Each expectation is finite at finite $N$. [Lemma 5.1](#a-bound-for-the-entire-trajectory) · [Proposition 5.2](#the-paired-endpoint) · [Proposition 6.2](#gaussian-mass-and-squared-prediction-error)
+
+$\square$
+
+**Lean proof.** [Paired discrete gradient descent](../formal/CirclePairedGDTheorem.lean#L59) · [All bounded coefficient sequences](../formal/CirclePairedGDClocksTail.lean#L49) · [Finite endpoint moments](../formal/CirclePairedGDIntegrable.lean#L156)
+
+The asymptotic behavior of the signed mean $\mathbb{E}[\Delta]$ for unit-step GD remains open.
+
+**Step size, moments and distribution.** The fixed-step divergence proof exhibits a particular set of seeds on which the squared separation grows faster than the reciprocal of its probability. For fixed $\eta>0$, this witness box has probability $\exp[-\Theta_\eta(m(T+\log N+1))]$. Indeed, its $3m$ coordinates occupy intervals of length $\ell=(8N\,512^{2T})^{-1}$. The standard Gaussian density on those intervals lies between $e^{-(R+1)^2/2}/\sqrt{2\pi}$ and $1/\sqrt{2\pi}$, for a fixed $R=R(\eta)$. Multiplying the coordinate bounds gives the stated scale. This quantifies one contribution to the second moment. [Lower box probability](../formal/CircleSynchronizedWidth.lean#L59) · [Upper box probability](../formal/CircleSynchronizedWidth.lean#L324)
+
+At **equal layer rates**, a single curvature measurement at initialization separates the distributional and moment conclusions. Let $\Lambda_0$ be the largest eigenvalue of $J_0J_0^\top/N$ and use the constant step $1/\max(1,\Lambda_0)$. At $m=N^{32}$ and $H$, the resulting unconditional RMS reference error is $O(N^{-15})$ for odd $N\ge12{,}000{,}001$. This cap agrees with a unit step except on a set of probability at most $e^{-m/240}$ for odd $N\ge81$. Consequently the capped and unit-step learners have the same limit in distribution, even at $H$, where the unit-step second moment diverges. For every schedule $\lceil\pi^2\log N\rceil\le T\le385N^3$, their scaled outputs $N^2(Y_T-1)$ both converge in law to $\mathcal N(-\pi^2/36,7\pi^2/1620)$ as odd $N\to\infty$. The initialization cap illustrates the role of taming an explicit Euler step in moment estimates [@hutzenthaler2012]. [Capped RMS](../formal/CircleSharpGDMoments.lean#L248) · [Rejection probability](../formal/CircleCapMoments.lean#L295) · [Capped limit](../formal/CircleGaussianLimit.lean#L158) · [Fixed-step limit](../formal/CircleGaussianLimit.lean#L181)
+
+> **Theorem 3 (gradient flow).** For all sufficiently large odd $N$, there exists an event of probability at least $1-96N^{-158}$ on which both copies fit and $|N^2\Delta-c_NX|=O(N^{-13}\log N)$. The probability of a wrong ordering is $O(N^{-13})$. Over all seeds,
+>
+> $$
+> \left\|\Delta-\frac{c_N X}{N^2}\right\|_{L^2}=O(N^{-15}),
+> \qquad
+> \mathbb{E}[\Delta]=\frac{\pi^2}{40N^2}+O(N^{-4}).
+> $$
+
+**Proof idea.** Loss dissipation controls even exceptional trajectories, so the two tracking errors can be subtracted in $L^2$. For the sign, conditioning on a random direction in readout space bounds the probability that the initial deficit is small compared with the error for that same seed.
+
+**Proof.** Proposition 7.2 supplies the common fitting and tracking event. For each rate let $e_\tau=Y_\tau-Z_\tau$. Since $\Delta-c_NX/N^2=e_{1/2}-e_2$ exactly, its $L^2$ norm is at most $\|e_{1/2}\|_2+\|e_2\|_2=O(N^{-15})$ by the same proposition. Proposition 8.1 gives the $O(N^{-13})$ ordering error. Conditional on the hidden weights, the initial readouts are centered, so $\mathbb{E}X=1$. Taking expectations in the identity yields $|\mathbb{E}\Delta-c_N/N^2|=O(N^{-15})$ by Cauchy–Schwarz. Inserting the expansion of $c_N$ gives the signed mean formula. [Proposition 7.2](#projection-fitting-and-exceptional-seeds) · [Proposition 8.1](#ordering-across-all-seeds) · [Corollary 8.3](#the-limiting-coefficient-and-the-signed-shift)
+
+$\square$
+
+**Lean proof.** [Joint fitting and tracking](../formal/CirclePairedTheorem.lean#L41) · [Unconditional tracking and ordering](../formal/CirclePairedTheorem.lean#L209) · [Signed expectation](../formal/CirclePairedTheorem.lean#L264) · [Second-order RMS constant](../formal/CirclePairedSecondOrder.lean#L93)
+
+**What the two ordering rates measure.** For the paired unit-step result each initialization event is obtained using second-moment bounds with failure budget $N^{-1/2}$, and the small-score band is chosen at the same scale. For flow, exponential bounds on Gaussian sums give polynomially small exceptional sets of arbitrarily high fixed order. Integrating over a random readout direction also controls the dependence of the score on the tracking error and removes a logarithmic factor from the final ordering bound. These proofs yield $O(N^{-1/2})$ and $O(N^{-13})$, respectively. They leave open the sharp rates for either algorithm. [GD initialization](../formal/CirclePositiveConfidence.lean#L165) · [GD sign transfer](../formal/CirclePairedGDEndpoint.lean#L49) · [Flow ordering bound](../formal/CirclePairedOrdering.lean#L573)
+
+> **Corollary 3.1 (Prediction from initialization).** For either training rule,
+>
+> $$
+> Y_{1/2}-Y_2=\frac{\pi^2}{40}\frac{1-Q_N f_0}{N^2}+o_p(N^{-2}).
+> $$
+>
+> Fix $0<\gamma\le B<\infty$. On the corresponding theorem’s fitting and tracking event, whenever $\gamma\le |X|\le B$, the sign of $\Delta$ is the sign of $X$ and $|\Delta|$ has order $N^{-2}$ for all sufficiently large $N$. The two fitted predictions differ by at most $2N^{-3}$ in grid RMS.
+
+**Proof idea.** A deficit bounded away from zero gives the reference gap a fixed sign and a size bounded below on the $N^{-2}$ scale. The tracking error is smaller on this scale.
+
+**Proof.** Theorem 2 gives the expansion for GD. For flow, Theorem 3 gives $N^2\Delta-c_NX\to0$ in $L^2$. Since $\|X\|_2\le\sqrt{3/2}$ and $c_N\to\pi^2/40$, replacing $c_N$ by its limit preserves $L^2$ convergence and hence convergence in probability. On the fitting and tracking event of either theorem, $|N^2\Delta-c_NX|\le c_N\gamma/2$ eventually because the left side is uniformly $o(1)$ there and $c_N$ tends to a positive constant. For $\gamma\le|X|\le B$ this forces equal signs and bounds $N^2|\Delta|$ between $c_N\gamma/2$ and $c_N(B+\gamma/2)$. The grid RMS discrepancy is at most the sum of the two fitting errors.
+
+$\square$
+
+**Lean proof.** [Discrete limiting prediction](../formal/CirclePairedGDTheorem.lean#L47) · [Flow limiting prediction](../formal/CirclePairedTheorem.lean#L221) · [Discrete joint event](../formal/CirclePairedGDTypical.lean#L208) · [Fixed-band flow bounds](../formal/CirclePairedTheorem.lean#L185)
+
+### Varying the hidden-layer rate
+
+At every odd $N\ge3$, $c_N(\tau,\sigma)>0$ for $0\le\tau<\sigma$ and
+$$
+\lim_{N\to\infty} c_N(\tau,\sigma)=\frac{\pi^2}{12}
+\left(\frac{\sigma}{2+\sigma}-\frac{\tau}{2+\tau}\right).
+$$
+The limiting slopes for $1/2$ to $1$ and $1$ to $2$ are $\pi^2/90$ and $\pi^2/72$, respectively. For $1/2\le\tau<\sigma\le2$ and two endpoint-measurable flows on the same Gaussian seed, at width $N^{32}$ and horizon $H$, the RMS error of $N^2(Y_\tau-Y_\sigma)-c_N(\tau,\sigma)X$ is at most $2C/\sqrt N$ for odd $N\ge33$. Here $C$ is the single-rate tracking constant, independent of the rates and the selected flows. Consequently the error tends to zero in probability. At one fixed rate $r\in[1/2,2]$, $N^2(Y_r-1)$ converges in law to a Gaussian with mean $-\pi^2r/[12(2+r)]$ and variance $(\pi^2/360)[1+5r^2/(2+r)^2]$. [Positivity](../formal/CircleRateDial.lean#L24) · [Limit](../formal/CircleRateDial.lean#L28) · [Common-seed flow](../formal/CircleRateDial.lean#L93) · [Single-rate Gaussian law](../formal/CircleGaussianLimit.lean#L133)
+
+For odd $N\ge36{,}865$, the RMS error of the scaled two-rate prediction is at most $2C_{\rm tr}/N^{13}$, uniformly in the chosen multipliers. Moreover, for every fixed nonnegative integer $k$ and $N\ge k+17$ above this cutoff, one event of probability at least $1-34/N^k$ guarantees that both copies fit and each endpoint satisfies $|Y_r-Z_r|\le(1+176\pi^2)/N^3$. The event works for every compatible flow path from each seed it contains. [Sharp two-rate RMS bound](../formal/CircleRateDial.lean#L138) · [Simultaneous fitting](../formal/CircleRateDial.lean#L158)
+
+With independent seeds, even two copies of the *same* learner exhibit a random difference. At widths tending to infinity, if the reference tracking error is $o(\sqrt{V_N})$ outside an event of vanishing probability, the difference divided by $\sqrt{2V_N}$ converges in law to a standard normal. Here $V_N$ is the single-copy reference variance. This statement uses the product seed law. [Independent trained copies](../formal/CircleWeakPrediction.lean#L129)
+
+At equal rates the flow moment limits hold more broadly. Along growing odd grids, at any widths $m\ge N^{16}$ and physical times $\pi^2\log N\le T\le H$, $N^2(\mathbb EY-1)\to-\pi^2/36$ and $N^4\operatorname{Var}Y\to7\pi^2/1620$ for every admissible measurable selection. [Equal-rate flow moment limits](../formal/CircleBroadFlow.lean#L134)
+
+## Finite-width experiments
+
+For each of four designs we trained the two flow learners from 48 Gaussian draws and 48 independent draws from the Gaussian law conditional on $X<0$. The latter sample uses rejection before training. It tests the prediction that the slower learner can finish with the smaller population mean. The two learners within each pair share all initial parameters. Across widths the unconditional draws use common random numbers: for each seed the smaller network uses the first $m$ neurons of the larger one. At width 8,192 the unconditional $N=3$ and $N=5$ designs use identical initial parameters. Rejection can select different attempts at different widths in the conditional sample. [Integrator and data](../layer-rates/README.md)
+
+Heun's explicit trapezoidal rule recomputes both gradients and gates at the provisional state. The primary runs use step $h=1/4$ to time 160 for $N=3$ and 512 for $N=5$. The theorem horizons are 1,027 and 3,735, respectively. [Exact horizon calculations](../formal/CircleFiniteHorizons.lean#L62)
+
+![The initial deficit $X$ and measured population gap $N^2\Delta$ for 96 pairs at $N=3$, $m=32{,}768$ and time 160, with $N^2=9$. The finite-grid prediction has slope $c_3=0.239159$. The right panel enlarges the neighborhood of a tie. Vertical bars show the largest step-halving change measured in each sampling group.](paired-ordering.png)
+
+At width 32,768 the sign of $X$ predicts all 48 unconditional orderings. Always predicting a larger mean for the slower learner succeeds 45 times. In the conditional sample, where this prediction reverses, the faster learner finishes higher in 46 pairs. Both misses have initial grid means within 0.005 of one. For one ordinary seed with $Q_Nf_0=-0.06839$, the predicted scaled gap is $+0.25551$ and the measured gap is $+0.25300$. At $Q_Nf_0=1.11761$, these values are $-0.02813$ and $-0.02871$. Lean verifies the sign counts by arithmetic on the recorded decimals. The simulation is a numerical computation. [Checked sign counts](../formal/CirclePairedData.lean#L114)
+
+**Table 2.** Correct sign predictions out of the eligible pairs, with exact 95% binomial intervals for the success probability. The margin subset has $\lvert X\rvert\ge0.1$. A tie counts as a miss. G denotes the Gaussian sample and C the Gaussian sample conditional on $X<0$.
+
+| $N$ | $m$ | Law | All pairs (95% interval) | Margin subset (95% interval) |
+| --- | ---: | :---: | --- | --- |
+| 3 | 512 | G | 47/48 (0.889, 0.999) | 46/46 (0.923, 1.000) |
+| 3 | 512 | C | 39/48 (0.674, 0.911) | 19/22 (0.651, 0.971) |
+| 3 | 8,192 | G | 48/48 (0.926, 1.000) | 46/46 (0.923, 1.000) |
+| 3 | 8,192 | C | 46/48 (0.857, 0.995) | 25/25 (0.863, 1.000) |
+| 3 | 32,768 | G | 48/48 (0.926, 1.000) | 46/46 (0.923, 1.000) |
+| 3 | 32,768 | C | 46/48 (0.857, 0.995) | 33/33 (0.894, 1.000) |
+| 5 | 8,192 | G | 47/48 (0.889, 0.999) | 46/46 (0.923, 1.000) |
+| 5 | 8,192 | C | 44/48 (0.800, 0.977) | 26/26 (0.868, 1.000) |
+
+**Table 3.** Through-origin slope $\widehat\beta=\sum XN^2\Delta/\sum X^2$ on all 48 pairs per design and law, with its 95% percentile interval from 4,096 within-sample pair bootstrap replicates. RMS error is measured against $c_N X$. [Full summary](../layer-rates/paired-summary.csv)
+
+| $N$ | $m$ | Law | Slope (95% interval) | RMS error |
+| --- | ---: | :---: | --- | ---: |
+| 3 | 512 | G | 0.1760 (0.1671, 0.1842) | 0.06942 |
+| 3 | 512 | C | 0.2032 (0.1689, 0.2338) | 0.03439 |
+| 3 | 8,192 | G | 0.2231 (0.2196, 0.2266) | 0.01860 |
+| 3 | 8,192 | C | 0.2367 (0.2288, 0.2457) | 0.00642 |
+| 3 | 32,768 | G | 0.2310 (0.2299, 0.2321) | 0.00931 |
+| 3 | 32,768 | C | 0.2323 (0.2277, 0.2363) | 0.00428 |
+| 5 | 8,192 | G | 0.2140 (0.2097, 0.2182) | 0.03302 |
+| 5 | 8,192 | C | 0.2160 (0.1885, 0.2405) | 0.01700 |
+
+For the three unconditional $N=3$ samples, $c_3-\widehat\beta$ is 0.06317, 0.01606 and 0.00816 in order of increasing width. Multiplication by $\sqrt m$ gives 1.43, 1.45 and 1.48. An ordinary least-squares fit of $\log(c_3-\widehat\beta)$ against $\log m$ gives a decay exponent of 0.492 (95% percentile interval 0.446–0.538). Each of 4,096 bootstrap replicates draws 48 seed indices with replacement and uses the *same* indices at all three widths to refit both the slopes and the exponent. At $N=5$, $m=8{,}192$, the rescaled shortfall is 2.74. An empirical correction of about $1.45/\sqrt m$ thus describes these three $N=3$ designs. The coefficient depends on the grid in these samples. Work on finite-width tangent kernels studies corrections to the infinite-width dynamics [@hanin2020; @dyer2020; @huang2020; @roberts2022]. The present coefficient is measured.
+
+**Table 4.** Changes in $N^2\Delta$ under step halving, in units of $10^{-4}$. Each entry gives the RMS and maximum absolute change across the prespecified seeds. The first comparison uses eight seeds per row, the second the first three of those eight. All 88 comparisons preserve the sign. [Refinement data](../layer-rates/paired-refinement.csv)
+
+| $N$ | $m$ | Law | $1/4\to1/8$ (RMS, max) | $1/8\to1/16$ (RMS, max) |
+| --- | ---: | :---: | ---: | ---: |
+| 3 | 512 | G | 8.941, 22.687 | 4.847, 8.222 |
+| 3 | 512 | C | 1.958, 3.191 | 1.808, 3.073 |
+| 3 | 8,192 | G | 1.126, 2.532 | 0.586, 0.854 |
+| 3 | 8,192 | C | 0.767, 1.774 | 0.494, 0.703 |
+| 3 | 32,768 | G | 0.209, 0.545 | 0.087, 0.124 |
+| 3 | 32,768 | C | 0.456, 0.891 | 0.072, 0.121 |
+| 5 | 8,192 | G | 2.082, 4.018 | 0.928, 1.584 |
+| 5 | 8,192 | C | 1.724, 3.389 | 0.452, 0.709 |
+
+ReLU gate crossings affect the order of integration. Across the 24 design, seed and sampling-law combinations with all three step sizes, the observed orders $\log_2(\lvert D_h-D_{h/2}\rvert/\lvert D_{h/2}-D_{h/4}\rvert)$ range from $-2.41$ to $7.00$, where $D_h$ denotes the computed $N^2\Delta$. For each design and law we use the largest observed change in Table 4 as an empirical discretization error bar on the scaled gap. At width 32,768 the largest change is $8.91\times10^{-5}$ across both samples, compared with the slope shortfall 0.00816 at a unit deficit. These checks give no uniform bound across seeds or on the error of an individual trajectory. A separate boundary check at step $1/16$ includes all 19 misses in the primary data and preserves each miss. [Boundary checks](../layer-rates/paired-boundary.csv)
+
+Across the 384 primary pairs, the final grid RMS is below $1.43\times10^{-12}$. For exact flow started at a computed endpoint, the continuation bound gives a further scaled change through $H$ below $8\times10^{-10}$. The recorded diagnostic $\mathrm{imbalance\_drift}$ is the maximum over neurons of the absolute change in $a_j^2-\lVert w_j\rVert^2/\tau$. In exact weighted flow, the two terms have equal time derivatives by ReLU homogeneity, the per-neuron form of balancedness for homogeneous networks [@du2018]. [Checked endpoint and continuation inequalities](../formal/CirclePairedResidualData.lean#L83)
+
+### Dependence on width and grid size
+
+We extended the unconditional sample to 3,216 pairs on five grids, using $m=512\cdot4^j$ for $0\le j\le5$. Each grid reuses its seed indices across all six widths, including the 192 overlapping design–seed pairs from the original unconditional sample. We integrated with Heun step $1/4$ until a block endpoint had grid RMS below $10^{-10}$ or reached $H$. The largest scaled continuation bound from the numerical endpoints was $1.45\times10^{-6}$. For each $N$ we regressed $\log(c_N-\widehat\beta_m)$ on $\log m$. Each of the 4,096 bootstrap replicates resampled seed indices once and used those indices at all six widths. The intervals below describe seed-sampling uncertainty over the measured width range. On an Intel Core Ultra 9 285K CPU with eight worker processes and single-threaded BLAS, the six-width sweep took 144 seconds. Replaying the original direct NumPy integrations took 56 seconds and reproduced the recorded outputs byte for byte. [Per-design results](../layer-rates/width-summary.csv) · [Joint bootstrap](../layer-rates/width-trends.csv)
+
+**Table 5.** Fitted exponent and amplitude of the shortfall over six widths. The last column gives the observed shortfall at the largest width.
+
+| $N$ | Seeds per width | $\widehat\alpha$ (95% interval) | $\widehat\kappa$ (95% interval) | Shortfall at $m=524{,}288$ |
+| ---: | ---: | --- | --- | ---: |
+| 3 | 200 | 0.469 (0.452, 0.485) | 1.07 (0.90, 1.25) | 0.00228 |
+| 5 | 128 | 0.439 (0.420, 0.459) | 1.68 (1.38, 2.04) | 0.00512 |
+| 7 | 96 | 0.419 (0.399, 0.438) | 1.98 (1.64, 2.39) | 0.00746 |
+| 9 | 64 | 0.406 (0.381, 0.431) | 2.21 (1.69, 2.84) | 0.00983 |
+| 11 | 48 | 0.397 (0.371, 0.424) | 2.43 (1.85, 3.21) | 0.01213 |
+
+![Shortfall in the fitted slope across six widths. Lines fit $\kappa m^{-\alpha}$. Bars through the markers give 95% seed-bootstrap intervals. The bars just to their right show the slope sensitivity obtained by applying the largest measured step-halving change to each response. Three fixed seeds per design were repeated at step $1/8$.](../layer-rates/width-scaling.png)
+
+The slope shortfall shrinks with width on every grid. At $N=3$, the six-width fit gives a smaller exponent than the three-width estimate from 48 seeds. The fitted coefficient increases and the fitted exponent decreases across these five grids. To place the widths on the scale of the observable, the first tested width whose estimated slope reached $0.95c_N$ was 32,768 at $N=3$, 131,072 at $N=5$, and 524,288 at $N=7,9,11$. These are sample estimates for this statistic.
+
+### Optimizer and initialization controls
+
+We also ran paired unit-step GD to update $H$ on 24 common Gaussian seeds in each original grid size at widths 512 and 8,192. The ordering agreed with $X$ on 24 of 24 seeds at each width for $N=3$ and on 23 of 24 at each width for $N=5$. In the equal-rate capped comparison, $\eta_*=1$ on all 96 of these design–seed pairs and the endpoints coincided with equal-rate unit-step GD. In a separate small-width check at $N=3,m=8$, the cap activated on 3 of 128 natural seeds. The largest absolute change in the endpoint population mean was 0.0192. These runs measure ordinary seeds and give little information about the tail integral in the divergence theorem. [Control results](../layer-rates/control-summary.csv)
+
+For the initialization control we drew $m/2$ Gaussian neurons and included each hidden vector twice, with opposite readouts [@zhang2020]. The initial function vanishes identically, so $X=1$. In 24 paired flow runs per design, the slow copy finished higher in all 96 cases. At widths 512 and 8,192 the respective mean scaled gaps were 0.197 and 0.227 on the three-point grid ($c_3=0.239$), and 0.171 and 0.228 on the five-point grid ($c_5=0.244$). [Initializations and updates](../layer-rates/width_sweep.py)
+
 ## Discrete gradient descent on typical initializations
 
 Fix either hidden step $\tau\in\{1/2,2\}$, with readout step one. Write $b=b_{\tau,N}$, so $0\le b\le1$ and $Z_\tau=Qf_0+bX$. Write $r_t=(f_t(x_i)-y_i)_{i=1}^N$ for the grid residual and $\|r_t\|_N^2=N^{-1}\sum_i r_{t,i}^2$. We use the unit-step spectral bound $\|I-K_\tau\|\le1-g_\tau$, where $K_\tau$ includes the grid normalization $1/N$ and $g_\tau=\tau/(\pi N)^2$. The operator norm is induced by $\|\cdot\|_N$. We will compare one actual update with $I-K_\tau$ even when a hidden unit changes its activation during the step. [Unit-step spectral bound](../formal/CirclePositiveSpectrum.lean#L212)
+
+**Where the width enters.** The factor $1/\sqrt m$ controls the size of a single neuron's update and the fluctuations in an empirical kernel entry. Setting $m=N^{32}$ gives $1/\sqrt m=N^{-16}$. In the unit-step proof, allowing $N^4$ times this scale for cumulative motion gives a relative displacement of $N^{-12}$. The kernel perturbation then fits within the $O(N^{-2})$ spectral gap, with enough room to sum the projected changes through $H$. The flow proof takes a radius $32(1+U)/N^{16}$, where $U$ bounds the time integral of the frozen residual. Controlling this integral also controls the error in the population mean. Thus $32$ is an exponent in a sufficient choice of width. [GD parameter inequalities](../formal/CirclePairedGDTypical.lean#L24) · [Flow radius budget](../formal/CircleSharpTracking.lean#L359)
 
 ### A bound for the entire trajectory
 
 For the one-rate estimate take
 
 $$
-\delta=N^{-1/2},\qquad R=\sqrt{12/\delta},\qquad
+\delta=N^{-1/2},\qquad R_0=\sqrt{12/\delta},\qquad
 \rho=N^{-12},\qquad u=160N^{-12},\qquad s=\max(1,\tau).
 $$
 
-Let $k=15/[32(\pi N)^2]$ and $q=1-k$.
+Let $\kappa=15/[32(\pi N)^2]$ and $\beta=1-\kappa$.
 
 > **Lemma 5.1 (One-rate trajectory estimate).** For every sufficiently large odd $N$, take $m=N^{32}$ and either $\tau\in\{1/2,2\}$. There exists a measurable set $G_\tau$ of initial weights of probability at least $1-\delta$ on which, simultaneously for all integers $t\ge0$,
 >
 > $$
-> \|r_t\|_N\le Rq^t,\qquad
+> \|r_t\|_N\le R_0\beta^t,\qquad
 > |Qf_t-Z_\tau|\le N^{-4}+b\|r_t\|_N .
 > $$
 
 **Proof idea.** The frozen kernel contracts the residual. If the actual residual has decayed geometrically so far, the accumulated motion of each neuron is small. Only initially near-zero preactivations can change sign during the next update. Their total weight is small enough to preserve the contraction. The projection $Q-bQ_N$ cancels the population update of the frozen kernel, so summing the remaining errors controls the population mean.
 
-**Proof.** For one initial neuron $z=(a,w)$ put $E=a^2+\|w\|^2$. Its three coordinates are independent standard normals, so $\mathbb{E} E=3$, $\mathbb{E} E^2=15$ and $\mathrm{Var}(E)=6$. In this initialization calculation the neuron averages use independent draws. Chebyshev gives $\Pr(m^{-1}\sum_j E_j>4)\le6/m$. At each grid input $f_0$ is centered and has second moment $1/2$, since the readout is independent of the hidden weight and a standard normal has positive-part second moment $1/2$. The grid average of $y_i^2$ is $3/2$. Thus $\mathbb{E}\|r_0\|_N^2=2$ and $\Pr(\|r_0\|_N>R)\le\delta/6$. [Initial residual moment](../formal/CircleInitialResidualSecond.lean#L96)
+**Proof.** For one initial neuron $z=(a,w)$ put $\mathcal E=a^2+\|w\|^2$. Its three coordinates are independent standard normals, so $\mathbb{E} \mathcal E=3$, $\mathbb{E} \mathcal E^2=15$ and $\mathrm{Var}(\mathcal E)=6$. In this initialization calculation the neuron averages use independent draws. Chebyshev gives $\Pr(m^{-1}\sum_j \mathcal E_j>4)\le6/m$. At each grid input $f_0$ is centered and has second moment $1/2$, since the readout is independent of the hidden weight and a standard normal has positive-part second moment $1/2$. The grid average of $y_i^2$ is $3/2$. Thus $\mathbb{E}\|r_0\|_N^2=2$ and $\Pr(\|r_0\|_N>R_0)\le\delta/6$. [Initial residual moment](../formal/CircleInitialResidualSecond.lean#L96)
 
-We also need the energy of neurons whose activation could change under a displacement of size $\rho\sqrt E$. For a unit input $v$, define $M(v)=E\,\mathbf{1}_{\{|w^\top v|\le\rho\sqrt E\}}$. The direction of $z$ is uniform on the two-dimensional sphere and independent of its radius. Its projection onto $(0,v)$ is uniform on $[-1,1]$ after division by the radius. Hence $\mathbb{E} M(v)=3\rho$ and $\mathbb{E} M(v)^2=15\rho$. Averaging $M(v)$ over the circle preserves its expectation and, by Jensen, gives a second moment at most $15\rho$. For each grid input and for this one angular average, Chebyshev bounds the probability that the neuron average exceeds $6\rho$ by $15\rho/[m(3\rho)^2]$. The probability that any of the $N+1$ bounds fails is at most $5(N+1)/(3m\rho)$. This bound and $6/m$ are each at most $\delta/6$ for sufficiently large $N$ at $m=N^{32}$. [Gaussian margin moments](../formal/CircleInitializationConcentration.lean#L747) · [Simultaneous grid and angular margins](../formal/CircleFiniteConfidence.lean#L152)
+We also need the energy of neurons whose activation could change under a displacement of size $\rho\sqrt{\mathcal E}$. For a unit input $v$, define $M(v)=\mathcal E\,\mathbf{1}_{\{|w^\top v|\le\rho\sqrt{\mathcal E}\}}$. The direction of $z$ is uniform on the two-dimensional sphere and independent of its radius. Its projection onto $(0,v)$ is uniform on $[-1,1]$ after division by the radius. Hence $\mathbb{E} M(v)=3\rho$ and $\mathbb{E} M(v)^2=15\rho$. Averaging $M(v)$ over the circle preserves its expectation and, by Jensen, gives a second moment at most $15\rho$. For each grid input and for this one angular average, Chebyshev bounds the probability that the neuron average exceeds $6\rho$ by $15\rho/[m(3\rho)^2]$. The probability that any of the $N+1$ bounds fails is at most $5(N+1)/(3m\rho)$. This bound and $6/m$ are each at most $\delta/6$ for sufficiently large $N$ at $m=N^{32}$. [Gaussian margin moments](../formal/CircleInitializationConcentration.lean#L747) · [Simultaneous grid and angular margins](../formal/CircleFiniteConfidence.lean#L152)
 
 Write $h(v,v')$ for the one-neuron contribution to the unnormalized tangent kernel at initialization. With $p(v)=[w^\top v]_+$ and $d(v)=\mathbf{1}_{\{w^\top v>0\}}$ it is
 
@@ -256,19 +411,19 @@ $$
 h(v,v')=p(v)p(v')+\tau a^2 d(v)d(v')\,v^\top v'.
 $$
 
-Thus $|h|\le s E$. Denote the neuron average by $\widehat h$, and its expectation by $h_*$, so $(K_\tau)_{ij}=h_*(x_i,x_j)/N$. Each column also gives an angular row $Qh(\cdot,x_j)$ and a difference of rows $(Q-bQ_N)h(\cdot,x_j)$. The first is bounded by $sE$ and the second by $2sE$. The expectation of the second is zero by the defining population-to-grid ratio $b$. For a family of $d$ such quantities each bounded by $BE$, the probability that any neuron average deviates from its expectation by more than $B\sqrt{90d/(m\delta)}$ is at most $\delta/6$. Indeed each variance is at most $15B^2/m$ and we sum Chebyshev's bound over the family. Apply this to the $N^2$ grid entries, the $N$ angular entries, and the $N$ differences. All three thresholds are at most $u$ for sufficiently large $N$. Together with the residual, energy and margins, these three families give a measurable event $G_\tau$ of probability at least $1-\delta$. The formal proof further sharpens the envelope for the row difference to $s(6/N+1-b)E$. [Row cancellation and concentration](../formal/CirclePositiveConfidence.lean#L96) · [Joint event](../formal/CirclePositiveConfidence.lean#L165)
+Thus $|h|\le s \mathcal E$. Denote the neuron average by $\widehat h$, and its expectation by $h_*$, so $(K_\tau)_{ij}=h_*(x_i,x_j)/N$. Each column also gives an angular row $Qh(\cdot,x_j)$ and a difference of rows $(Q-bQ_N)h(\cdot,x_j)$. The first is bounded by $s\mathcal E$ and the second by $2s\mathcal E$. The expectation of the second is zero by the defining population-to-grid ratio $b$. For a family of $d$ such quantities each bounded by $B\mathcal E$, the probability that any neuron average deviates from its expectation by more than $B\sqrt{90d/(m\delta)}$ is at most $\delta/6$. Indeed each variance is at most $15B^2/m$ and we sum Chebyshev's bound over the family. Apply this to the $N^2$ grid entries, the $N$ angular entries, and the $N$ differences. All three thresholds are at most $u$ for sufficiently large $N$. Together with the residual, energy and margins, these three families give a measurable event $G_\tau$ of probability at least $1-\delta$. The formal proof further sharpens the envelope for the row difference to $s(6/N+1-b)\mathcal E$. [Row cancellation and concentration](../formal/CirclePositiveConfidence.lean#L148) · [Joint event](../formal/CirclePositiveConfidence.lean#L165)
 
 Fix a seed in $G_\tau$. At the specified width the parameters satisfy
 
 $$
-\frac{2sR}{\sqrt m}\le\rho k,\qquad
-36s\rho+u\le g_\tau-k,\qquad
-[u+(1+b)36s\rho]R/k\le N^{-4}.
+\frac{2sR_0}{\sqrt m}\le\rho \kappa,\qquad
+36s\rho+u\le g_\tau-\kappa,\qquad
+[u+(1+b)36s\rho]R_0/\kappa\le N^{-4}.
 $$
 
-For sufficiently large $N$ these follow from $s\le2$, $R\le4N$, $1/k\le40N^2$ and $g_\tau-k\ge1/[32(\pi N)^2]$. In particular, the bracket in the third inequality is at most $304N^{-12}$. [Parameter bounds](../formal/CirclePairedGDTypical.lean#L24)
+For sufficiently large $N$ these follow from $s\le2$, $R_0\le4N$, $1/\kappa\le40N^2$ and $g_\tau-\kappa\ge1/[32(\pi N)^2]$. In particular, the bracket in the third inequality is at most $304N^{-12}$. [Parameter bounds](../formal/CirclePairedGDTypical.lean#L24)
 
-We prove simultaneously that $\|r_t\|_N\le Rq^t$ and that every neuron's displacement from its initial value is at most $\rho(1-q^t)\sqrt{E_j}$. Both hold at $t=0$. The norm of the update to neuron $j$ is at most $s\|r_t\|_N\|(a_{j,t},w_{j,t})\|/\sqrt m$. This follows by Cauchy–Schwarz in the grid sums for the two layer gradients, using $|[w^\top x]_+|\le\|w\|$ and $\|d(x)x\|\le1$. The displacement hypothesis bounds the current neuron norm by $2\sqrt{E_j}$. The first parameter inequality then bounds the extra motion by $\rho k q^t\sqrt{E_j}$. Every point on the straight update segment, including its endpoint, therefore has displacement at most $\rho(1-q^{t+1})\sqrt{E_j}$. [Simultaneous update and motion bound](../formal/CircleWeightedStep.lean#L42) · [Induction](../formal/CircleWeightedDynamics.lean#L93)
+We prove simultaneously that $\|r_t\|_N\le R_0\beta^t$ and that every neuron's displacement from its initial value is at most $\rho(1-\beta^t)\sqrt{\mathcal E_j}$. Both hold at $t=0$. The norm of the update to neuron $j$ is at most $s\|r_t\|_N\|(a_{j,t},w_{j,t})\|/\sqrt m$. This follows by Cauchy–Schwarz in the grid sums for the two layer gradients, using $|[w^\top x]_+|\le\|w\|$ and $\|d(x)x\|\le1$. The displacement hypothesis bounds the current neuron norm by $2\sqrt{\mathcal E_j}$. The first parameter inequality then bounds the extra motion by $\rho \kappa \beta^t\sqrt{\mathcal E_j}$. Every point on the straight update segment, including its endpoint, therefore has displacement at most $\rho(1-\beta^{t+1})\sqrt{\mathcal E_j}$. [Simultaneous update and motion bound](../formal/CircleWeightedStep.lean#L42) · [Induction](../formal/CircleWeightedDynamics.lean#L93)
 
 For $0\le v\le1$, form the mixed kernel $h_{t,v}$ by taking the prediction derivative at the fraction $v$ of this segment and the training-input derivative at its start, with the layer weights $1,\tau$, summed over neurons with the network normalization. Integrating the prediction along the segment gives
 
@@ -279,14 +434,14 @@ $$
 
 Along a straight segment a hidden preactivation is affine. A crossing has measure zero, and a preactivation identically zero along the segment has zero directional derivative. The integral therefore holds with the prescribed ReLU gate at zero. [Exact segment increment](../formal/CircleWeightedStep.lean#L93)
 
-For either input, a changed gate requires the initial preactivation to lie within $\rho\sqrt{E_j}$ of zero. The change in a product of two activations is bounded by $(2\rho+\rho^2)E_j$, by expanding the product and using the Lipschitz bound for each activation. The product of two readout weights obeys the same estimate. Changing the two gates in the remaining initial product costs at most $E_j$ times the sum of their two margin indicators. Summing these bounds gives
+For either input, a changed gate requires the initial preactivation to lie within $\rho\sqrt{\mathcal E_j}$ of zero. The change in a product of two activations is bounded by $(2\rho+\rho^2)\mathcal E_j$, by expanding the product and using the Lipschitz bound for each activation. The product of two readout weights obeys the same estimate. Changing the two gates in the remaining initial product costs at most $\mathcal E_j$ times the sum of their two margin indicators. Summing these bounds gives
 
 $$
 |h_{t,v}(x_i,x_j)-\widehat h(x_i,x_j)|
 \le s[(4\rho+2\rho^2)4+12\rho]\le36s\rho .
 $$
 
-The identical estimate holds after averaging the first input over the circle, using the angular margin bound. If all entries of an unnormalized kernel error have magnitude at most $e$, each coordinate of its normalized action on $r$ is bounded by $eQ_N|r|\le e\|r\|_N$. It follows that $\|K_{t,v}-K_\tau\|\le36s\rho+u$. Applying the reference contraction and the second parameter inequality now gives $\|r_{t+1}\|_N\le(1-g_\tau+36s\rho+u)\|r_t\|_N\le q\|r_t\|_N$. This closes the induction and yields $\sum_{t\ge0}\|r_t\|_N\le R/k$. [Mixed-kernel drift](../formal/CircleTangentDrift.lean#L205) · [Discrete contraction](../formal/CircleWeightedDynamics.lean#L93)
+The identical estimate holds after averaging the first input over the circle, using the angular margin bound. If all entries of an unnormalized kernel error have magnitude at most $e$, each coordinate of its normalized action on $r$ is bounded by $eQ_N|r|\le e\|r\|_N$. It follows that $\|K_{t,v}-K_\tau\|\le36s\rho+u$. Applying the reference contraction and the second parameter inequality now gives $\|r_{t+1}\|_N\le(1-g_\tau+36s\rho+u)\|r_t\|_N\le \beta\|r_t\|_N$. This closes the induction and yields $\sum_{t\ge0}\|r_t\|_N\le R_0/\kappa$. [Mixed-kernel drift](../formal/CircleTangentDrift.lean#L205) · [Discrete contraction](../formal/CircleWeightedDynamics.lean#L93)
 
 Apply $Q-bQ_N$ to the same segment identity for the prediction. At initialization each resulting kernel column has magnitude at most $u$. At every intermediate point its change is at most $(1+b)36s\rho$ by the two drift bounds. Each step therefore changes $(Q-bQ_N)f_t$ by at most $[u+(1+b)36s\rho]\|r_t\|_N$. Summation and the third parameter inequality bound the total change by $N^{-4}$. Since $Q_N y=1$, we have
 
@@ -305,10 +460,10 @@ $\square$
 
 **Proof idea.** The two copies share the exact same initial deficit. Subtract their one-rate estimates and the initial population means cancel. A sign error is then possible only on the exceptional set or when the initial grid mean lies very close to one.
 
-**Proof.** At the prescribed horizon $H$, the inequality $1-k\le e^{-k}$ gives
+**Proof.** At the prescribed horizon $H$, the inequality $1-\kappa\le e^{-\kappa}$ gives
 
 $$
-Rq^H\le \sqrt{12}\,N^{1/4}(2\sqrt{12}\,N^{7/2})^{-15/16}
+R_0\beta^H\le \sqrt{12}\,N^{1/4}(2\sqrt{12}\,N^{7/2})^{-15/16}
 \le4N^{-97/32}.
 $$
 
@@ -640,19 +795,41 @@ $$
 \le 2C_{\mathrm{tr}}N^{-15}.
 $$
 
-Dividing the remainder bound of Corollary 4.3 by $N^2$ shows that the error after both displayed terms of the signed expansion is at most $2C_{\mathrm{tr}}N^{-15}+400N^{-6}$. In particular, slowing the hidden layer increases the expected population mean for sufficiently large odd $N$. [Reference expectations](../formal/CircleReferenceMoments.lean#L200) · [All-seed tracking](../formal/CirclePairedTheorem.lean#L209)
+Dividing the remainder bound of Corollary 2.3 by $N^2$ shows that the error after both displayed terms of the signed expansion is at most $2C_{\mathrm{tr}}N^{-15}+400N^{-6}$. In particular, slowing the hidden layer increases the expected population mean for sufficiently large odd $N$. [Reference expectations](../formal/CircleReferenceMoments.lean#L200) · [All-seed tracking](../formal/CirclePairedTheorem.lean#L209)
 
 $\square$
 
 **Lean proof.** [signed_mean_finite](../formal/CirclePairedTheorem.lean#L234) proves the finite-grid mean bound and [signed_mean_expansion](../formal/CirclePairedTheorem.lean#L264) gives its two-term expansion. [leading_rms](../formal/CirclePairedSecondOrder.lean#L93) proves the limit. The signed estimate applies [mean_transfer](../formal/CircleComparison.lean#L116) at the two rates, with [sharp_tracking](../formal/CircleSharpMoments.lean#L159) and [weighted_reference_moments](../formal/CircleReferenceMoments.lean#L200). The expansion is [uniform_remainder](../formal/CircleCoefficientRemainder.lean#L91).
 
+## Related work {.unnumbered}
+
+**Tangent kernels and lazy training.** Gradient descent induces a kernel on network outputs. In the infinite-width tangent regime the kernel freezes, and training follows the linearization at initialization [@jacot2018; @lee2019]. Scaling can itself produce this linear behavior [@chizat2019]. For wide two-layer networks there are quantitative results on convergence to zero training loss and on generalization through a related kernel [@du2019; @arora2019]. Our question begins where a training-loss guarantee ends: what does the fitted network predict between observations?
+
+**Parametrization and layer scale.** In shallow univariate ReLU regression, relative initialization scales can change the learning regime and the resulting interpolant [@williams2019]. An initialization-dependent curvature penalty characterizes wide two-layer fits in further settings [@jin2023]. Standard parametrization and the broader classification of infinite-width limits make explicit which layer scales survive in the training dynamics [@sohl2020; @yang2021]. Here both copies stay in the kernel regime. The rate ratio changes the relative contribution of the two parameter blocks to the tangent kernel, and we compute its effect on a particular observable of the trained pair.
+
+**Spectral bias away from the data.** Arc-cosine kernels describe angular dependence from rectified Gaussian features [@cho2011]. Spectral analyses relate activation, geometry and frequency to approximation and learning speed [@bietti2019; @basri2019; @rahaman2019]. Bowman and Montúfar bound how closely finite networks follow population kernel dynamics away from their training sets [@bowman2022]. In our finite grid, harmonics separated by multiples of the grid size are indistinguishable at every observed node. Their relative kernel weights determine how much of a constant grid residual contributes to the population mean. Related symmetry reductions in kernel quadrature give a single weight per orbit of a fully symmetric design [@karvonen2018].
+
+**Initial output.** Kernel regression from a random initial function retains a component of that function away from the data. Zhang et al. quantify its contribution to regression error and give an antisymmetric initialization with zero initial output [@zhang2020]. Sharing the initialization lets us use its observable grid deficit as a predictor of the difference between two fitted networks.
+
+**Nonsmooth flows.** A ReLU gate can change sign on the training set. Differential inclusions and generalized gradients give precise notions of a solution at such points [@clarke1990; @filippov1988; @aubin1984]. Conservative fields give a calculus for derivatives returned by automatic differentiation in nonsmooth models [@bolte2021]. Our flow results quantify over measurable choices of admissible trajectories. The existence and selection proofs are part of the formal development. The weighted squared-norm difference monitored in the simulations is related to the balance invariants of homogeneous gradient flow [@du2018].
+
+**Euler schemes and rare events.** Explicit Euler can have divergent moments for superlinear stochastic differential equations [@hutzenthaler2011]. Theorem 2.1 of @hutzenthaler2013 also permits zero diffusion when the initial law satisfies its lower tail bound. Their §4 uses the scalar drift $-x^5$ with Gaussian initial data. A tamed Euler method restores strong convergence under the assumptions of @hutzenthaler2012. Separately, @gyongy1998 proves almost-sure convergence for Euler approximations under a drift monotonicity condition and Lipschitz diffusion. These examples motivate distinguishing trajectory or distributional statements from bounds on moments. Our unstable iterates arise from the gradient update of a finite network.
+
+**Finite-width corrections.** The tangent kernel fluctuates at initialization [@hanin2020] and can evolve during training. Diagram expansions and the neural tangent hierarchy describe corrections to infinite-width dynamics [@dyer2020; @huang2020]. Effective-theory expansions also relate deviations from Gaussian predictions to the network's aspect ratio [@roberts2022]. The width dependence measured here concerns a particular regression slope across shared seeds. Its coefficient is estimated from the paired experiments.
+
+**Initialization variance and ensembles.** Random-feature models separate initialization variance from sampling and label variance, and quantify what averaging independent fits removes [@adlam2020; @dascoli2020]. Geiger et al. measure how fluctuations from initialization change with width and ensembling [@geiger2020]. With training data and initialization shared, one can instead ask which of two choices of layer rate will give the larger mean on the same seed.
+
+**Formal verification.** Lean 4 checks formal derivations [@demoura2021]. Mathlib supplies definitions and lemmas for classical mathematics [@mathlib2020]. The statement audit relates the definitions used by the checker to the network, sampling law and observables appearing here.
+
 ## Discussion
 
 The coefficient $\pi^2/40$ arises because frequencies that agree with a constant on the sampled grid can have zero average around the circle. Changing the relative hidden rate changes the weight of these frequencies in the tangent kernel. The two runs therefore transfer different fractions of the initial grid deficit to their population means. The nonlinear estimates bound the error in this calculation for the trained networks themselves.
 
-For evaluations of learned behavior, this example identifies information absent from the training residual alone. With the data, model class, initial weights and fitting tolerance all specified, the layer learning rates can still change the population mean by a predictable amount. The result concerns one observable and one family of training sets. Extending it to other input distributions, other observables, or minibatch updates requires corresponding estimates for their training dynamics. Even in this construction, the signed expectation for discrete GD remains open.
+The leading off-grid effect itself is small. For unit deficit the finite-grid reference gap is about $0.0266$ at $N=3$ and $0.000257$ at $N=31$. The nonlinear results concern the population mean of a two-layer, full-batch network in the kernel regime, with a particular grid and teacher. A first-harmonic calculation gives a second kernel observable. Extending the trajectory estimates to other observables or to stochastic training would require additional control.
 
-The fixed-kernel reference uses the tangent-kernel description of training of Jacot, Gabriel and Hongler [\[1\]](#references). Hutzenthaler, Jentzen and Kloeden [\[2\]](#references) showed that rare initial data can cause moment divergence in explicit Euler approximations, including for a scalar ordinary differential equation with Gaussian initial data. In the present problem the observable is a difference of two population means computed from the same initial weights. Its divergence requires a bound on cancellation both within each network and between the two trajectories.
+## Use of AI tools and author contributions {.unnumbered}
+
+The author selected the research question and directed the investigation. OpenAI Codex and Anthropic Claude developed proofs and Lean formalizations, implemented and analyzed numerical experiments, and drafted manuscript text under that direction. The author has read and reviewed the revised manuscript, including the new theorems and experiments, and takes responsibility for its contents. The mathematical results are formalized in Lean and checked against the definitions identified in the statement audit. Experimental interpretations depend on the simulation and statistical analysis described in the paper.
 
 ## Formalization and reproducibility
 
@@ -668,7 +845,11 @@ lake exe cache get
 python3 verify.py --report .lake/replay
 ```
 
-The recorded audit rebuilt 213 libraries with the pinned Lean 4.35.0 toolchain. Both kernel checkers accepted the same closed export of 7,404 safe declarations, including 6,131 theorem declarations. Its foundational axioms are propositional extensionality, classical choice and quotient soundness. The receipt records the source and data hashes, dependency revisions, and the SHA-256 fingerprint of the exported proof objects. [Receipt](../formal/verification/receipt.json) · [Standard replay](../formal/verification/kernel.log) · [Paranoid replay](../formal/verification/paranoid.log)
+The development uses Lean 4.35.0 and Mathlib commit `56a005855ea17e0b0958f73ec801ae140b0a1679` [@demoura2021; @mathlib2020]. The paper’s import closure contains 145 project library modules and 5,428 safe declarations, including 4,511 theorems. The paper audit prints the axioms of the 209 theorem declarations cited directly. The verification record identifies the closed export replayed through Lean’s kernel checker in standard and paranoid modes. Its foundational axioms are propositional extensionality, classical choice and quotient soundness. The receipt records source and data hashes, dependency revisions and the SHA-256 fingerprint of the exported proof objects. [Receipt](../formal/verification/receipt.json) · [Standard replay](../formal/verification/kernel.log) · [Paranoid replay](../formal/verification/paranoid.log)
+
+::: {.named-only}
+The reviewed baseline is commit `34cc12b89d7b5b60853c8e74f1df75f9087e82e0` (tag `paper-v1`).
+:::
 
 ## Appendix. Equal layer rates, step selection and unconditional moments
 
@@ -958,7 +1139,55 @@ theorem signed_mean_expansion (n : ℕ) (hn : 36864 ≤ n+1) (ho : Odd (n+1)) (F
       bound)
 ```
 
-## References
+## Appendix. Statement audit and trust model
 
-1. A. Jacot, F. Gabriel and C. Hongler. Neural tangent kernel: convergence and generalization in neural networks. *Advances in Neural Information Processing Systems* **31** (2018). [Proceedings paper](https://papers.neurips.cc/paper_files/paper/2018/hash/5a4be1fa34e62bb8a6ec6b91d2462f5a-Abstract.html)
-2. M. Hutzenthaler, A. Jentzen and P. E. Kloeden. Divergence of the multilevel Monte Carlo Euler method for nonlinear stochastic differential equations. *Annals of Applied Probability* **23** (2013), no. 5, 1913–1966. [DOI 10.1214/12-AAP890](https://doi.org/10.1214/12-AAP890)
+The index `n` in the paired theorems denotes $N-1$. Each source location below points to the declaration that fixes the interpretation of a symbol in the statement. The two existence theorems show that the flow hypotheses can be satisfied for both rates on every grid used in the comparison. Both miss events count ties.
+
+### Model and reference
+
+| Paper object | Fully qualified Lean name | File and line | Meaning |
+| --- | --- | --- | --- |
+| Seed space | `CircleEscapeBridge.Seed` | [CircleEscapeBridge.lean:71](../formal/CircleEscapeBridge.lean#L71) | Three real coordinates per neuron, in the order $a,w_1,w_2$. |
+| Seed law | `CircleEscapeBridge.seedLaw` | [CircleEscapeBridge.lean:73](../formal/CircleEscapeBridge.lean#L73) | Product of $3m$ standard real Gaussian laws. |
+| Grid node | `CircleEscape.gridPoint` | [CircleEscape.lean:224](../formal/CircleEscape.lean#L224) | Unit complex number at angle $2\pi i/N$, viewed in the real plane. |
+| Activation | `CircleEscape.feature` | [CircleEscape.lean:27](../formal/CircleEscape.lean#L27) | Positive part of the real inner product. |
+| Network | `CircleEscape.output` | [CircleEscape.lean:29](../formal/CircleEscape.lean#L29) | $c\sum_j a_j[w_j^\top x]_+$ with $c=1/\sqrt m$. |
+| GD gate | `CircleEscape.gate` | [CircleEscape.lean:33](../formal/CircleEscape.lean#L33) | One at a positive preactivation and zero elsewhere. |
+| Grid label | `CircleFlowPath.circleLabel` | [CircleFlowPath.lean:545](../formal/CircleFlowPath.lean#L545) | One plus the first coordinate of the input. |
+| Residual vector | `CircleActualTracking.gridR` | [CircleActualTracking.lean:23](../formal/CircleActualTracking.lean#L23) | Grid residuals divided by $\sqrt N$, so the Euclidean norm is the RMS error. |
+| Population mean | `CircleEscape.populationMean` | [CircleEscape.lean:210](../formal/CircleEscape.lean#L210) | Defined as $(c/\pi)\sum_j a_j\lVert w_j\rVert$. |
+| Angular integral | `CircleAngularGeometry.real_angular_mean` | [CircleAngularGeometry.lean:54](../formal/CircleAngularGeometry.lean#L54) | Identifies this closed form with $(2\pi)^{-1}\int_0^{2\pi} f(x(u))\,du$. |
+| Grid deficit $X$ | `CirclePairedCoefficient.score` | [CirclePairedCoefficient.lean:21](../formal/CirclePairedCoefficient.lean#L21) | One minus the initial grid mean. |
+| Quadrature factor | `CircleSpectrum.weight` | [CircleSpectrum.lean:180](../formal/CircleSpectrum.lean#L180) | Constant-mode mass divided by that mass plus its grid aliases. |
+| Reference $Z_\tau$ | `CircleEscapeBridge.reference` | [CircleEscapeBridge.lean:145](../formal/CircleEscapeBridge.lean#L145) | Initial population mean plus the quadrature factor times $X$. |
+| Slope $c_N$ | `CirclePairedOrdering.coefficient` | [CirclePairedOrdering.lean:37](../formal/CirclePairedOrdering.lean#L37) | $N^2$ times the slow-minus-fast quadrature factor. |
+| Endpoint $H$ | `CircleFlowTracking.horizon` | [CircleFlowTracking.lean:347](../formal/CircleFlowTracking.lean#L347) | Natural-number ceiling of $2\pi^2N^2\log(2\sqrt{12N}\,N^3)$. |
+| GD width | `CirclePairedGDEndpoint.gridWidth` | [CirclePairedGDEndpoint.lean:24](../formal/CirclePairedGDEndpoint.lean#L24) | $(n+1)^{32}$. |
+
+### Dynamics and existence
+
+| Paper object | Fully qualified Lean name | File and line | Meaning |
+| --- | --- | --- | --- |
+| Flow width | `CirclePairedTheorem.Width` | [CirclePairedTheorem.lean:23](../formal/CirclePairedTheorem.lean#L23) | $(n+1)^{32}$. |
+| GD direction | `CircleWeightedStep.direction` | [CircleWeightedStep.lean:23](../formal/CircleWeightedStep.lean#L23) | Negative grid-loss gradient with hidden multiplier $\tau$, evaluated at the current state. |
+| GD segment | `CircleWeightedStep.segment` | [CircleWeightedStep.lean:27](../formal/CircleWeightedStep.lean#L27) | Current state plus a scalar multiple of the simultaneous update direction. |
+| GD trajectory | `CircleWeightedStep.iterate` | [CircleWeightedStep.lean:30](../formal/CircleWeightedStep.lean#L30) | Begins at the seed and takes a segment of length parameter $\eta$ at each update. |
+| GD endpoint mean | `CircleWeightedDynamics.learnerMean` | [CircleWeightedDynamics.lean:27](../formal/CircleWeightedDynamics.lean#L27) | Population mean after the specified number of updates. |
+| Flow path | `CircleFlowPath.IsFlow` | [CircleFlowPath.lean:189](../formal/CircleFlowPath.lean#L189) | Coordinatewise absolutely continuous, with weighted velocity given almost everywhere by admissible gates. |
+| Flow learner | `CircleComparison.Learner` | [CircleComparison.lean:35](../formal/CircleComparison.lean#L35) | Starts at each seed, satisfies the flow predicate on every finite interval and has measurable endpoints. |
+| Existence | `CircleComparison.learner_exists` | [CircleComparison.lean:41](../formal/CircleComparison.lean#L41) | Provides a learner for $N\ge3$ and $0<\tau\le2$. |
+| Clarke selection | `CircleFlowConstruction.exists_borel_global_clarke_flow` | [CircleFlowConstruction.lean:75](../formal/CircleFlowConstruction.lean#L75) | Borel map into continuous paths with velocity in the essential gradient hull almost everywhere. |
+
+### Events and error criteria
+
+| Paper object | Fully qualified Lean name | File and line | Meaning |
+| --- | --- | --- | --- |
+| GD scaled gap | `CirclePairedGDEndpoint.scaled` | [CirclePairedGDEndpoint.lean:26](../formal/CirclePairedGDEndpoint.lean#L26) | $N^2$ times the slow-minus-fast GD contrast at unit step and $H$. |
+| Flow scaled gap | `CirclePairedOrdering.difference` | [CirclePairedOrdering.lean:39](../formal/CirclePairedOrdering.lean#L39) | $N^2$ times the slow-minus-fast flow contrast at $H$. |
+| GD miss | `CirclePairedGDEndpoint.miss` | [CirclePairedGDEndpoint.lean:29](../formal/CirclePairedGDEndpoint.lean#L29) | Scaled GD gap times $X$ is nonpositive. |
+| Flow miss | `CirclePairedOrdering.miss` | [CirclePairedOrdering.lean:42](../formal/CirclePairedOrdering.lean#L42) | Scaled flow gap times $X$ is nonpositive. |
+| GD event | `CirclePairedGDTheorem.FitsAndTracks` | [CirclePairedGDTheorem.lean:21](../formal/CirclePairedGDTheorem.lean#L21) | One measurable event controls both fits and the scaled gap, with failure at most $2/\sqrt N$. |
+| Flow event bounds | `CirclePairedTheorem.PairedBounds` | [CirclePairedTheorem.lean:32](../formal/CirclePairedTheorem.lean#L32) | Both fits, their grid RMS disagreement and the scaled prediction error at one seed. |
+| GD squared error | `CirclePairedGDClocksTail.mse` | [CirclePairedGDClocksTail.lean:20](../formal/CirclePairedGDClocksTail.lean#L20) | Full-seed expectation of $(\Delta_T-dX/N^2)^2$ for the specified step and coefficient. |
+
+**Trust model.** The Lean development is the proof of record. The prose explains the arguments. A reader can audit the correspondence by comparing the declarations above with the model and the reported theorem statements. In particular, Lean defines the population mean by the closed form and proves its equality with the angular integral. The formal guarantee rests on this correspondence, the Lean kernel and its foundational axioms, and the mathematical definitions used from Mathlib, including its Gaussian measures and integration. Kernel replay checks the proof terms, so a reader need not verify individual proof steps by hand. The numerical experiments have a separate reproducibility record.

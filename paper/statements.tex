@@ -1,0 +1,41 @@
+\newtheorem{papertheorem}{Theorem}
+\newtheorem{paperlemma}{Lemma}[section]
+\newtheorem{paperproposition}[paperlemma]{Proposition}
+\newtheorem{papercorollary}[paperlemma]{Corollary}
+\theoremstyle{definition}
+\newtheorem{paperdefinition}[paperlemma]{Definition}
+% Reject a mismatch between a statement number on GitHub and its printed number.
+\newcommand{\checkstatement}[2]{%
+  \begingroup\edef\actualnumber{#1}\def\sourcenumber{#2}%
+  \ifx\actualnumber\sourcenumber\else
+    \PackageError{manuscript}{Statement #2 has TeX number \actualnumber}
+      {Check the order and section numbers of the Markdown theorem statements.}%
+  \fi\endgroup}
+% Read both fonts by filename from the TeX bundle, so code listings build
+% independently of the host system's font configuration.
+\font\leansource="[DejaVuSansMono.ttf]" at 8.2pt
+\font\leanmath="[latinmodern-math.otf]" at 8.2pt
+\newcommand{\leanchar}[1]{%
+  \iffontchar\leansource"#1\relax\char"#1\relax
+  \else\iffontchar\leanmath"#1\relax{\leanmath\char"#1\relax}%
+  \else\PackageError{manuscript}{Missing Lean source glyph U+#1}{Supply a font with this glyph.}%
+  \fi\fi}
+\newcommand{\leangap}{\hskip\fontdimen2\leansource\relax}
+% Keep a complete declaration on the page whenever it can fit on one page.
+% The smaller strut supplies the leading of the code font instead of the prose font.
+\newbox\leanlisting
+\newenvironment{leanscript}{%
+  \par\setbox\leanlisting=\vbox\bgroup\hsize=\linewidth
+  \addvspace{5pt}\begingroup\leansource\baselineskip=10.5pt
+  \setbox\strutbox=\hbox{\vrule height 7.3pt depth 2pt width 0pt}%
+  \parskip=0pt\parindent=0pt\rightskip=0pt plus 1fil\parfillskip=0pt
+  \hyphenpenalty=10000\exhyphenpenalty=10000
+}{%
+  \par\endgroup\addvspace{6pt}\egroup
+  \ifdim\dimexpr\ht\leanlisting+\dp\leanlisting\relax>\textheight
+    \unvbox\leanlisting
+  \else\box\leanlisting\fi\par}
+\newcommand{\leanline}[1]{\noindent\hangindent=2em\hangafter=1\strut#1\par}
+\newcommand{\proofsources}[1]{{\normalfont\footnotesize\color{proofink}#1}}
+\providecommand{\tightlist}{\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\providecommand{\pandocbounded}[1]{#1}
