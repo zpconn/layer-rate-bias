@@ -11,7 +11,7 @@ Take an odd number $N\ge3$ of equally spaced angles on the unit circle with labe
 Fix the readout rate at one. Set the hidden rate to $1/2$ in the slow copy and $2$ in the fast copy. Write $Y_{1/2}$ and $Y_2$ for their population means (predictions averaged under $Q$) at the common endpoint specified below. As odd $N$ grows, the slow-minus-fast gap satisfies
 
 $$
-Y_{1/2}-Y_2 = \frac{\pi^2}{40}\,\frac{1-Q_N f_0}{N^2} + o_p(N^{-2}).
+Y_{1/2}-Y_2 = \frac{\pi^2}{40} \cdot \frac{1-Q_N f_0}{N^2} + o_p(N^{-2}).
 $$
 
 When the initial grid mean is below one, the slower rate is predicted to finish higher. When it is above one, the choice reverses. With probability tending to one, both copies have grid RMS error at most $N^{-3}$, the **fitting tolerance**. Their grid predictions then differ by at most $2N^{-3}$ in RMS. When the initial deficit has magnitude bounded above and away from zero, the population gap has order $N^{-2}$ on the event where the prediction is accurate. The training choice steers an aspect of the learned function that the fit leaves undetermined.
