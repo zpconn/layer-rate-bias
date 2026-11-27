@@ -6,6 +6,20 @@ Zach Conn
 
 The current edition is the [named preprint](paper.pdf). The same [manuscript](paper.md) and [bibliography](references.bib) generate the [GitHub reader edition](paper-reader.md). The earlier anonymous review edition and supplement are archived in the [paper-v2 release](https://github.com/zpconn/layer-rate-bias/releases/tag/paper-v2).
 
+## Upload paper-v3 to arXiv
+
+Use the [released source ZIP](https://github.com/zpconn/layer-rate-bias/releases/download/paper-v3/paper-sources.zip) and paste the [ASCII metadata](arxiv-metadata.txt) into the corresponding fields. The suggested primary category is `cs.LG`, with `stat.ML` as a cross-list. If arXiv asks for endorsement, its account workflow identifies the relevant domain. [Metadata requirements](https://info.arxiv.org/help/prep.html) · [Endorsement policy](https://info.arxiv.org/help/endorsement.html)
+
+1. On **Review Files**, confirm the processor shows `paper.tex` as the main file, XeLaTeX as the compiler and TeX Live 2025 as the distribution. Check that `proof-sources.zip` appears as one file at the upload root.
+2. Download the PDF that arXiv processed. Run the command below from the repository root, substituting the downloaded PDF's path. It lists attachments with Poppler’s `pdfdetach` when available and compares the embedded proof ZIP byte for byte with the upload archive.
+3. Read the processed PDF before submitting. The author is responsible for its content, including work produced with AI assistance. An announced version remains accessible after a withdrawal. [Code of conduct](https://info.arxiv.org/help/policies/code_of_conduct.html) · [Withdrawal policy](https://info.arxiv.org/help/withdraw.html)
+
+```sh
+python3 paper/check_arxiv.py paper/paper-sources.zip --preview /path/to/arxiv-preview.pdf
+```
+
+The released proof ZIP contains 4,614,906 bytes. Its SHA-256 is `b565b1707fc7928eb0b86f2c6049923d98c34a10fdb0e8ce4912c8c831e71f83`. If arXiv expands the ZIP or the preview loses the attachment, use an embed-free variant with this digest and the archived release identifier in Section 10. Keep all compiler inputs outside `anc/`. Release commit `394f4f70bbb60676416846f2d145debbbaa372c8` records the complete upload; its sources are at `ac6b4f59c68069ebed08b5ccc2800a86f895635b`. [Software Heritage archive](https://archive.softwareheritage.org/swh:1:rev:394f4f70bbb60676416846f2d145debbbaa372c8/) · [Ancillary-file guidance](https://info.arxiv.org/help/ancillary_files.html)
+
 ## Rebuild the preprint
 
 Use Python 3.11 or newer with `pypdf==6.7.5`, Pandoc 3.10.2, Git and Tectonic 0.17.0. Run from the repository root.

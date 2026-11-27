@@ -1,0 +1,17 @@
+Title
+Steering a network's inductive bias with the hidden-layer learning rate
+
+Authors
+Zach Conn
+
+Abstract
+Can the initial predictions of a network tell us which of two learning rates will yield the larger population mean after training? For two-layer ReLU networks trained on an odd grid of $N$ points on the circle, the initial grid deficit $X$ predicts both the ordering and its size. Starting both copies from the same Gaussian seed and changing the hidden-layer rate from $1/2$ to $2$ gives a slow-minus-fast gap of $(\pi^2/40)X/N^2+o_p(N^{-2})$ at a common deterministic endpoint. The kernel calculation gives an exact positive coefficient $c_N$ for every odd $N\ge3$. For a smaller GD step we prove a finite-grid guarantee at widths proportional to $N^{16}$. The nonlinear unit-step and flow guarantees at this endpoint use width $N^{32}$ and very large sufficient grid sizes. Flow tracks its reference in mean square, while rare seeds make the corresponding fixed-step mean-square prediction error diverge. The slope shortfall decreases with width on all five grids. Over 512--524,288 neurons, single power-law fits give exponents of 0.40--0.47, decreasing with grid size. At intermediate widths the local exponents are close to one half. We formalize the training theorems in Lean 4 with Mathlib and separately check arithmetic on the frozen numerical records.
+
+Comments
+42 pages, 3 figures, 6 tables. Lean 4 formalization, code and data: https://github.com/zpconn/layer-rate-bias (tag paper-v3)
+
+Recommended primary category
+cs.LG
+
+Recommended cross-list
+stat.ML
