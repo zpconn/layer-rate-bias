@@ -43,6 +43,7 @@
 '_private.CircleFiniteConfidence.0.CircleFiniteConfidence.margin_failure' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
+'CircleFiniteHorizons.five' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleFiniteHorizons.three' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleFirstCosine.actual_amplitude' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleFirstCosineReference.interpolation_moments' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -84,10 +85,24 @@
 'CircleKernelIdentification.cartesian_kernel_isotropic' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleKernelIdentification.tangentFourier_piecewise' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleLocalContinuation.exists_on_horizon' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleMarginMass.marginFloor_eq' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleMarginMass.margin_mass' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleMeanDynamics.ae_joint_ode' depends on axioms: [propext, Classical.choice, Quot.sound]
+'_private.CircleMixingEnvelopes.0.CircleMixingEnvelopes.affine_interp' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
 'CircleMixingEnvelopes.gridMean_mix' depends on axioms: [propext, Classical.choice, Quot.sound]
+'_private.CircleMixingEnvelopes.0.CircleMixingEnvelopes.lcap' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleMixingEnvelopes.mixBudget_dominates' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleMixingEnvelopes.mixBudget_fourth' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleMixingEnvelopes.mixError_dominates' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleMixingEnvelopes.mixError_fourth' depends on axioms: [propext, Classical.choice, Quot.sound]
+'_private.CircleMixingEnvelopes.0.CircleMixingEnvelopes.qcap' depends on axioms: [propext, Classical.choice, Quot.sound]
+'_private.CircleMixingEnvelopes.0.CircleMixingEnvelopes.quadratic_interp' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
 'CirclePairedData.archived_primary_counts' depends on axioms: [propext]
+'CirclePairedData.widest_exceptions' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDBox.box_contrast_scaled' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDCenter.iterate_center' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDCenter.ratio_growth_exact' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -101,6 +116,7 @@
 'CirclePairedGDEndpoint.sign_of_tracks' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDFiniteTail.finite_mse_lower' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDGeometry.b_nonneg' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CirclePairedGDGeometry.b_upper' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDGeometry.center_segment' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDGeometry.gate_clearance' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDIntegrable.contrast_memLp' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -110,6 +126,7 @@
 'CirclePairedGDIntegrable.learnerMean_memLp' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDIntegrable.mse_lower' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDIntegrable.scaledScore_lpNorm_le' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CirclePairedGDIntegrable.scaledScore_memLp' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDScalar.nextMag_growth' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDScalar.ratio_step' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedGDShadow.shadow' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -148,6 +165,9 @@
  Quot.sound]
 'CirclePairedOrdering.paired_likely_cap' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePairedOrdering.seedBudget_tail' depends on axioms: [propext, Classical.choice, Quot.sound]
+'_private.CirclePairedOrdering.0.CirclePairedOrdering.shell_tail' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
 '_private.CirclePairedOrdering.0.CirclePairedOrdering.wrong_forces_error' depends on axioms: [propext,
  Classical.choice,
  Quot.sound]
@@ -168,6 +188,12 @@
  Classical.choice,
  Quot.sound]
 'CirclePositiveConfidence.six_tests' depends on axioms: [propext, Classical.choice, Quot.sound]
+'_private.CirclePositiveConfidence.0.CirclePositiveConfidence.sm_cap' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+'_private.CirclePositiveConfidence.0.CirclePositiveConfidence.sm_zero' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
 'CirclePositiveSchedule.schedule' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePositiveSpectrum.alias_gap' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CirclePositiveSpectrum.operator_upper' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -180,6 +206,7 @@
 'CircleRateDial.paired_flow_fit' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleRateDial.paired_flow_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleRateDial.paired_gd' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleReadoutMixing.mix_fubini_real' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleReadoutMixing.mixed_preserving' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleReferenceMoments.reference_moments' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleReferenceMoments.weighted_reference_moments' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -191,6 +218,7 @@
  Classical.choice,
  Quot.sound]
 'CircleResidualSpectrum.initialCoeff_high' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleResidualSpectrum.initialCoeff_uniform' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleScoreMargin.gaussian_band' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleScoreMargin.gridMean_near_tie' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSeedIntegrability.trained_memLp' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -198,6 +226,8 @@
 'CircleSharpGD.sharp_stop' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSharpGDMoments.accepted_benchmarks_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSharpGDMoments.capped_horizon_sharp' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleSharpInitialization.initialError_fourth' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleSharpInitialization.initial_operators_le' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSharpMoments.random_envelope_split' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSharpMoments.sharp_tracking' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSharpTracking.frozen_error_balance' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -209,12 +239,15 @@
 'CircleSharpTracking.spectral_tube' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleShortGDTails.early_degree' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSpectralPathLength.referencePath_deriv' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleSpectralPathLength.seedBudget_dominates' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSpectralPathLength.seedBudget_lp4' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSpectralPathLength.shell_count' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSpectralPathLength.shell_eigen' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSpectrum.S_eq_alias_sum' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSpectrum.halfWaveCoeff_even' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSpectrum.halfWaveCoeff_formula' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleSpectrum.halfWaveCoeff_odd_high' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleSpectrum.halfWaveCoeff_one' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSpectrum.scaledS_limit' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleSphereBand.projection_cdf' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleStats.circle_reference_variance' depends on axioms: [propext, Classical.choice, Quot.sound]
@@ -227,6 +260,7 @@
 'CircleTangentDrift.entry_drift' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleUniformMargins.marked_exp' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleUniformMargins.mesh_failure' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CircleUniformMargins.uniform_margins' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleWeakPrediction.independent_training' depends on axioms: [propext, Classical.choice, Quot.sound]
 '_private.CircleWeightedDynamics.0.CircleWeightedDynamics.bootstrap' depends on axioms: [propext,
  Classical.choice,

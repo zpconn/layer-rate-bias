@@ -96,7 +96,7 @@ def main():
         attachment = build / "proof-sources.zip"
         if attachment.read_bytes() != original:
             raise ValueError("The compiler changed its proof supplement input")
-        verify_export(build / "paper.pdf", attachment, anonymous=False)
+        verify_export(build / "paper.pdf", attachment)
         check_pdf_attachment(build / "paper.pdf", original)
 
 

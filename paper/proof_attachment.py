@@ -32,18 +32,16 @@ log, axiom audits, checker logs, and declaration inventory are in verification/.
 """
 
 
-IDENTIFIERS = re.compile(rb"Zach\s+Conn|zpconn|layer-rate-bias", re.I)
 PROCESS_TEXT = re.compile(rb"research agents|as an AI language model|TODO from (?:Codex|Claude)|<codex_internal_context", re.I)
 
 
-def inspect_text(data, name, anonymous):
-    for pattern in (PROCESS_TEXT, IDENTIFIERS) if anonymous else (PROCESS_TEXT,):
-        match = pattern.search(data)
-        if match:
-            raise ValueError(f"Export contains {match[0]!r} in {name}")
+def inspect_text(data, name):
+    match = PROCESS_TEXT.search(data)
+    if match:
+        raise ValueError(f"Export contains {match[0]!r} in {name}")
 
 
-def prepare_attachment(repo_root: Path, dest: Path, anonymous=False) -> set[str]:
+def prepare_attachment(repo_root: Path, dest: Path) -> set[str]:
     """Write a reproducible source ZIP after checking every input hash in the receipt."""
     report = Path("formal/verification")
     receipt_name = report / "receipt.json"
@@ -72,17 +70,12 @@ def prepare_attachment(repo_root: Path, dest: Path, anonymous=False) -> set[str]
                     "layer-rates/*.png", "docs/*.md", "paper/majority.py", "paper/*.png", "paper/references.bib"):
         for source in repo_root.glob(pattern):
             files[source.relative_to(repo_root)] = source.read_bytes()
-    # Include the cited Markdown so the verifier also checks that PaperAudit.lean
-    # matches the manuscript, even when replaying from the anonymous supplement.
-    manuscript = (repo_root / "paper/paper.md").read_bytes()
-    if anonymous:
-        manuscript = re.sub(rb"^\*\*Author\*\* .+$", b"**Author** Anonymous", manuscript, flags=re.M)
-        manuscript = re.sub(rb"^::: \{\.named-only\}\n.*?^:::\s*$", b"", manuscript, flags=re.M | re.S)
-    files[Path("paper/paper.md")] = manuscript
+    # Include the citation targets so the verifier can match PaperAudit to the manuscript.
+    files[Path("paper/paper.md")] = (repo_root / "paper/paper.md").read_bytes()
     if Path("LICENSE") not in files:
         raise ValueError("The source supplement needs the repository LICENSE")
     for path, data in files.items():
-        inspect_text(data, str(path), anonymous)
+        inspect_text(data, str(path))
 
     # The PDF stream compresses the ZIP. Stored entries also keep ZIP hashes
     # independent of the zlib version, file timestamps, and executable bits.

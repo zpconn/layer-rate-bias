@@ -324,7 +324,7 @@
     "CircleWidthResidualTail.lean": "edc690b7ee56ae3db83886df04ef0abbc3d4bf3bf6f81b5281a6217efe54c72f",
     "CircleWidthTracking.lean": "285f45ba9217568d688330d64adaf5a4a9e9fbe3ca6fd1cb9cd616b693f91829",
     "CircleWidthUpper.lean": "2d0feec573961996ba82ab170ad9691945fc1df1ffde85dd78b995c97d70e6bf",
-    "PaperAudit.lean": "1ca61e7e6bf007e2fc86d553e36c8c06a9a75bd8ca727ef4034e451b4b64ded1",
+    "PaperAudit.lean": "585a7f3dd7dc02bb3cca9567d4e1af8c286df59eaed2b2e5c091a7c5470c5eeb",
     "lake-manifest.json": "ec0620ab4cc6ecadff8dfdb5f36f0b8c7a0aa324b639c33fae524eb47c428920",
     "lakefile.toml": "7234b6aba00b6383483e6918c9858e1d5acdb0679572bd7e4cf93ed5c673d5e4",
     "lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"

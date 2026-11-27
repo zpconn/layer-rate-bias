@@ -74,7 +74,7 @@ $$
 \left(\frac12-\frac15\right)\frac{\pi^2}{12}=\frac{\pi^2}{40}.
 $$
 
-The reference difference is exactly $c_N X/N^2$. Moving from that identity to the trained-network prediction requires bounding the errors $Y_\tau-Z_\tau$ on actual training runs. [Exact finite-grid coefficient](../formal/CircleFiniteCoefficient.lean#L88)
+The reference difference is exactly $c_N X/N^2$. Moving from that identity to the trained-network prediction requires bounding the errors $Y_\tau-Z_\tau$ on actual training runs. [Exact reference difference](../formal/CircleFiniteCoefficient.lean#L118)
 
 ## How accurate is the prediction?
 
@@ -104,7 +104,7 @@ Over all seeds, each error $Y_\tau-Z_\tau$ has RMS at most a constant times $N^{
 
 The proof compares the actual kernel along the flow with its fixed reference kernel. For most seeds the two kernels start close, and at any given training input only a small fraction of units can switch between zero and positive activation. This controls how much the kernel changes and hence how far the actual population mean can depart from the reference. For exceptional seeds the decrease in loss bounds the movement of the weights. The proof uses that movement bound to keep even their contribution to the RMS small. [Tracking along the path](../formal/CircleSharpTracking.lean) · [Integration over all seeds](../formal/CircleSharpMoments.lean#L159)
 
-Averaging a trained model’s signed population-mean error over seeds gives its **statistical bias**, $\mathbb{E}[Y_\tau]-1$. For flow, the initial readout weights are independent of the hidden weights and have mean zero, so $\mathbb{E}[Q_N f_0]=0$ and $\mathbb{E}[X]=1$. The absolute value of the expected difference from the finite-grid prediction is bounded by its RMS. It follows that the difference in the flow biases is $\mathbb{E}[Y_{1/2}]-\mathbb{E}[Y_2]=c_N/N^2+O(N^{-15})$, positive for all sufficiently large odd $N$. For GD, squaring an error discards its sign, so the divergence result leaves the corresponding expected signed difference unresolved. [All-seed flow estimate](../formal/CirclePairedTheorem.lean#L209) · [Discrete scope](paired-discrete-gd.md)
+Averaging a trained model’s signed population-mean error over seeds gives its **statistical bias**, $\mathbb{E}[Y_\tau]-1$. For flow, the initial readout weights are independent of the hidden weights and have mean zero, so $\mathbb{E}[Q_N f_0]=0$ and $\mathbb{E}[X]=1$. The absolute value of the expected difference from the finite-grid prediction is bounded by its RMS. It follows that the difference in the flow biases is $\mathbb{E}[Y_{1/2}]-\mathbb{E}[Y_2]=c_N/N^2+O(N^{-15})$, positive for all sufficiently large odd $N$. For GD, squaring an error discards its sign, so the divergence result leaves the corresponding expected signed difference unresolved. [Signed flow expectation](../formal/CirclePairedTheorem.lean#L234) · [Discrete scope](paired-discrete-gd.md)
 
 In a smaller numerical test, $N=3$, $m=32{,}768$ and $c_3\approx0.239159$, compared with $\pi^2/40\approx0.246740$. Each pair used a numerical approximation to the two flows at a shorter training time than $H$. The initial deficit correctly predicted the observed ordering for 48 of 48 pairs under ordinary Gaussian sampling and 46 of 48 pairs sampled by retaining only seeds with $X<0$. Both misses had $X$ close to zero. [Figure and data](../layer-rates/README.md) · [Empirical checks in Lean](../formal/CirclePairedData.lean)
 

@@ -135,6 +135,7 @@ import all CircleWeightedStep
 #print axioms CircleFiniteCoefficient.weight_difference
 #print axioms CircleFiniteCoefficient.weight_exact
 #print axioms CircleFiniteConfidence.margin_failure
+#print axioms CircleFiniteHorizons.five
 #print axioms CircleFiniteHorizons.three
 #print axioms CircleFirstCosine.actual_amplitude
 #print axioms CircleFirstCosineReference.interpolation_moments
@@ -174,10 +175,20 @@ import all CircleWeightedStep
 #print axioms CircleKernelIdentification.cartesian_kernel_isotropic
 #print axioms CircleKernelIdentification.tangentFourier_piecewise
 #print axioms CircleLocalContinuation.exists_on_horizon
+#print axioms CircleMarginMass.marginFloor_eq
+#print axioms CircleMarginMass.margin_mass
 #print axioms CircleMeanDynamics.ae_joint_ode
+#print axioms CircleMixingEnvelopes.affine_interp
 #print axioms CircleMixingEnvelopes.gridMean_mix
+#print axioms CircleMixingEnvelopes.lcap
+#print axioms CircleMixingEnvelopes.mixBudget_dominates
 #print axioms CircleMixingEnvelopes.mixBudget_fourth
+#print axioms CircleMixingEnvelopes.mixError_dominates
+#print axioms CircleMixingEnvelopes.mixError_fourth
+#print axioms CircleMixingEnvelopes.qcap
+#print axioms CircleMixingEnvelopes.quadratic_interp
 #print axioms CirclePairedData.archived_primary_counts
+#print axioms CirclePairedData.widest_exceptions
 #print axioms CirclePairedGDBox.box_contrast_scaled
 #print axioms CirclePairedGDCenter.iterate_center
 #print axioms CirclePairedGDCenter.ratio_growth_exact
@@ -191,6 +202,7 @@ import all CircleWeightedStep
 #print axioms CirclePairedGDEndpoint.sign_of_tracks
 #print axioms CirclePairedGDFiniteTail.finite_mse_lower
 #print axioms CirclePairedGDGeometry.b_nonneg
+#print axioms CirclePairedGDGeometry.b_upper
 #print axioms CirclePairedGDGeometry.center_segment
 #print axioms CirclePairedGDGeometry.gate_clearance
 #print axioms CirclePairedGDIntegrable.contrast_memLp
@@ -198,6 +210,7 @@ import all CircleWeightedStep
 #print axioms CirclePairedGDIntegrable.learnerMean_memLp
 #print axioms CirclePairedGDIntegrable.mse_lower
 #print axioms CirclePairedGDIntegrable.scaledScore_lpNorm_le
+#print axioms CirclePairedGDIntegrable.scaledScore_memLp
 #print axioms CirclePairedGDScalar.nextMag_growth
 #print axioms CirclePairedGDScalar.ratio_step
 #print axioms CirclePairedGDShadow.shadow
@@ -222,6 +235,7 @@ import all CircleWeightedStep
 #print axioms CirclePairedOrdering.identity
 #print axioms CirclePairedOrdering.paired_likely_cap
 #print axioms CirclePairedOrdering.seedBudget_tail
+#print axioms CirclePairedOrdering.shell_tail
 #print axioms CirclePairedOrdering.wrong_forces_error
 #print axioms CirclePairedResidualData.primary_residuals_tails_times
 #print axioms CirclePairedSecondOrder.leading_rms
@@ -238,6 +252,8 @@ import all CircleWeightedStep
 #print axioms CirclePathSelection.chamberField_eq_essentialGradientHull
 #print axioms CirclePositiveConfidence.signed_failure
 #print axioms CirclePositiveConfidence.six_tests
+#print axioms CirclePositiveConfidence.sm_cap
+#print axioms CirclePositiveConfidence.sm_zero
 #print axioms CirclePositiveSchedule.schedule
 #print axioms CirclePositiveSpectrum.alias_gap
 #print axioms CirclePositiveSpectrum.operator_upper
@@ -250,6 +266,7 @@ import all CircleWeightedStep
 #print axioms CircleRateDial.paired_flow_fit
 #print axioms CircleRateDial.paired_flow_sharp
 #print axioms CircleRateDial.paired_gd
+#print axioms CircleReadoutMixing.mix_fubini_real
 #print axioms CircleReadoutMixing.mixed_preserving
 #print axioms CircleReferenceMoments.reference_moments
 #print axioms CircleReferenceMoments.weighted_reference_moments
@@ -259,6 +276,7 @@ import all CircleWeightedStep
 #print axioms CircleReparametrization.output_physical
 #print axioms CircleResidualSpectrum.alias_bound
 #print axioms CircleResidualSpectrum.initialCoeff_high
+#print axioms CircleResidualSpectrum.initialCoeff_uniform
 #print axioms CircleScoreMargin.gaussian_band
 #print axioms CircleScoreMargin.gridMean_near_tie
 #print axioms CircleSeedIntegrability.trained_memLp
@@ -266,6 +284,8 @@ import all CircleWeightedStep
 #print axioms CircleSharpGD.sharp_stop
 #print axioms CircleSharpGDMoments.accepted_benchmarks_sharp
 #print axioms CircleSharpGDMoments.capped_horizon_sharp
+#print axioms CircleSharpInitialization.initialError_fourth
+#print axioms CircleSharpInitialization.initial_operators_le
 #print axioms CircleSharpMoments.random_envelope_split
 #print axioms CircleSharpMoments.sharp_tracking
 #print axioms CircleSharpTracking.frozen_error_balance
@@ -277,12 +297,15 @@ import all CircleWeightedStep
 #print axioms CircleSharpTracking.spectral_tube
 #print axioms CircleShortGDTails.early_degree
 #print axioms CircleSpectralPathLength.referencePath_deriv
+#print axioms CircleSpectralPathLength.seedBudget_dominates
 #print axioms CircleSpectralPathLength.seedBudget_lp4
 #print axioms CircleSpectralPathLength.shell_count
 #print axioms CircleSpectralPathLength.shell_eigen
 #print axioms CircleSpectrum.S_eq_alias_sum
 #print axioms CircleSpectrum.halfWaveCoeff_even
 #print axioms CircleSpectrum.halfWaveCoeff_formula
+#print axioms CircleSpectrum.halfWaveCoeff_odd_high
+#print axioms CircleSpectrum.halfWaveCoeff_one
 #print axioms CircleSpectrum.scaledS_limit
 #print axioms CircleSphereBand.projection_cdf
 #print axioms CircleStats.circle_reference_variance
@@ -295,6 +318,7 @@ import all CircleWeightedStep
 #print axioms CircleTangentDrift.entry_drift
 #print axioms CircleUniformMargins.marked_exp
 #print axioms CircleUniformMargins.mesh_failure
+#print axioms CircleUniformMargins.uniform_margins
 #print axioms CircleWeakPrediction.independent_training
 #print axioms CircleWeightedDynamics.bootstrap
 #print axioms CircleWeightedDynamics.trajectory_of_contraction

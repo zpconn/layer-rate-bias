@@ -1,7 +1,6 @@
 """Typeset paper/paper.pdf with its receipt-verified Lean source attachment."""
 
 import argparse
-from hashlib import sha256
 import json
 import os
 from pathlib import Path
@@ -17,11 +16,6 @@ from proof_attachment import inspect_text, prepare_attachment
 
 
 REPOSITORY = "https://github.com/zpconn/layer-rate-bias/blob/"
-TMLR_ASSETS = {
-    "fancyhdr.sty": "3d2922548e0e5f1a6c5676eda6ebb6dc20d7d305b4d8c2be5f1c833fb1084e6d",
-    "tmlr.bst": "306fd454cf40771bee01293eeb98d2c1cd5f4e11ed0cd7296b335f354fc45206",
-    "tmlr.sty": "816214ff5919aa457b6b443bee52b15d9561421417b7f8a50cc84651519f0002",
-}
 DECLARATION = re.compile(
     r"^\s*(?:(?:private|protected|noncomputable|unsafe)\s+)*"
     r"(?:theorem\b|lemma\b|def\b|abbrev\b|structure\b|class\b|inductive\b|instance\b|/--|@\[)"
@@ -47,7 +41,7 @@ def repo_target(target, paper_dir):
     return source.relative_to(paper_dir.parent).as_posix()
 
 
-def pdf_link(target, paper_dir, revision, anonymous, members, changed):
+def pdf_link(target, paper_dir, revision, members, changed):
     """Use immutable repository URLs or human-readable locations in the ZIP."""
     url = urlsplit(target)
     path = repo_target(target, paper_dir)
@@ -56,7 +50,7 @@ def pdf_link(target, paper_dir, revision, anonymous, members, changed):
     if path == "paper/paper.md" and url.fragment:
         return "#" + url.fragment, None
     suffix = "#" + url.fragment if url.fragment else ""
-    if anonymous or path in changed:
+    if path in changed:
         if path not in members:
             raise ValueError(f"Manuscript target is missing from the supplement: {path}")
         line = ":" + url.fragment[1:] if re.fullmatch(r"L\d+", url.fragment) else suffix
@@ -105,7 +99,7 @@ def verify_lean_listings(blocks, paper_dir):
             raise ValueError(f"Lean listing differs from {link.geturl()}")
 
 
-def manuscript(pandoc, paper_dir, attachment_size, venue, anonymous, members):
+def manuscript(pandoc, paper_dir, attachment_size, members):
     document = json.loads(subprocess.check_output(
         [pandoc, "--from=markdown+gfm_auto_identifiers", "paper.md", "--to=json"], cwd=paper_dir))
     verify_documentation_anchors(paper_dir.parent)
@@ -115,13 +109,7 @@ def manuscript(pandoc, paper_dir, attachment_size, venue, anonymous, members):
         raise ValueError("Expected the manuscript title as the first level-one heading")
     meta = document["meta"]
     meta["title"] = {"t": "MetaInlines", "c": blocks.pop(0)["c"][2]}
-    author = take_labeled_paragraph(blocks, "Author")
-    if anonymous:
-        blocks[:] = [block for block in blocks if not (
-            block["t"] == "Div" and "named-only" in block["c"][0][1])]
-        meta["anonymous"] = {"t": "MetaBool", "c": True}
-    else:
-        meta["author"] = author
+    meta["author"] = take_labeled_paragraph(blocks, "Author")
     meta["abstract"] = take_labeled_paragraph(blocks, "Abstract.")
     meta["proof-source-size"] = {"t": "MetaString", "c": str(attachment_size)}
 
@@ -134,15 +122,13 @@ def manuscript(pandoc, paper_dir, attachment_size, venue, anonymous, members):
     for args in (["diff", "--name-only", "-z", "HEAD"], ["ls-files", "-o", "--exclude-standard", "-z"]):
         changed.update(subprocess.check_output(["git", *args], cwd=root, text=True).split("\0"))
 
-    # TMLR puts the bibliography before any appendices. citeproc fills #refs.
+    # Insert the bibliography before the first appendix. citeproc fills #refs.
     position = next((i for i, block in enumerate(blocks) if block["t"] == "Header" and
                      block["c"][2][:1] == [{"t": "Str", "c": "Appendix."}]), len(blocks))
-    if venue == "tmlr":
-        ref_blocks = [{"t": "RawBlock", "c": ["latex", r"\bibliographystyle{tmlr}\bibliography{references}"]}]
-    else:
-        ref_blocks = [{"t": "Header", "c": [2, ["references", ["unnumbered"], []], [{"t": "Str", "c": "References"}]]},
-                      {"t": "Div", "c": [["refs", [], []], []]}]
-    blocks[position:position] = ref_blocks
+    blocks[position:position] = [
+        {"t": "Header", "c": [2, ["references", ["unnumbered"], []], [{"t": "Str", "c": "References"}]]},
+        {"t": "Div", "c": [["refs", [], []], []]},
+    ]
     images = set()
     # The title is now metadata. Promote the remaining headings by one level.
     nodes = [document]
@@ -159,7 +145,7 @@ def manuscript(pandoc, paper_dir, attachment_size, venue, anonymous, members):
                 url = urlsplit(target[0])
                 if path and path.endswith(".lean") and url.fragment:
                     verify_lean_anchor(root / path, url.fragment)
-                target[0], location = pdf_link(target[0], paper_dir, revision, anonymous, members, changed)
+                target[0], location = pdf_link(target[0], paper_dir, revision, members, changed)
                 label = node["c"][1]
                 already_named = label == [{"t": "Str", "c": Path(location or "").name}]
                 if location and not already_named:
@@ -187,30 +173,28 @@ def tex_characters(text):
     return text.translate(str.maketrans(symbols))
 
 
-def verify_export(pdf, attachment, anonymous):
+def verify_export(pdf, attachment):
     from pypdf import PdfReader
 
     reader = PdfReader(pdf)
     if reader.attachments.get("proof-sources.zip") != [attachment.read_bytes()]:
         raise ValueError("Embedded ZIP differs from the checked supplement")
     metadata = reader.metadata
-    if (metadata.author or "") != ("" if anonymous else "Zach Conn"):
+    if metadata.author != "Zach Conn":
         raise ValueError("Unexpected PDF author metadata")
-    inspect_text(str(metadata).encode(), "PDF metadata", anonymous)
+    inspect_text(str(metadata).encode(), "PDF metadata")
     for i, page in enumerate(reader.pages, 1):
-        inspect_text(page.extract_text().encode(), f"PDF text on page {i}", anonymous)
+        inspect_text(page.extract_text().encode(), f"PDF text on page {i}")
         for ref in page.get("/Annots", []):
             annotation = ref.get_object()
-            inspect_text(str(annotation).encode(), f"PDF annotation on page {i}", anonymous)
+            inspect_text(str(annotation).encode(), f"PDF annotation on page {i}")
             if "/A" in annotation:
-                inspect_text(str(annotation["/A"]).encode(), f"PDF link action on page {i}", anonymous)
+                inspect_text(str(annotation["/A"]).encode(), f"PDF link action on page {i}")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--only-cached", action="store_true", help="use Tectonic's local bundle cache")
-    parser.add_argument("--venue", choices=("arxiv", "tmlr"), default="arxiv")
-    parser.add_argument("--anonymous", action="store_true", help="omit author identity and use the source ZIP")
     parser.add_argument("--github", action="store_true", help="generate paper-reader.md with resolved citations")
     parser.add_argument("--source-zip", action="store_true", help="also package the TeX source and inputs")
     args = parser.parse_args()
@@ -224,65 +208,45 @@ def main():
                         "-M", "reference-section-title=References", "--to=gfm+tex_math_dollars", "--fail-if-warnings",
                         "--wrap=none", "-o", "paper-reader.md"], cwd=paper_dir, check=True)
         return
-    edition = "paper" + ("-tmlr" if args.venue == "tmlr" else "") + ("-anon" if args.anonymous else "")
-    output = paper_dir / (edition + ".pdf")
+    output = paper_dir / "paper.pdf"
     with tempfile.TemporaryDirectory(prefix=".typeset-", dir=paper_dir) as temporary:
         build = Path(temporary)
         attachment = build / "proof-sources.zip"
-        inspect_text((paper_dir / "paper.md").read_bytes(), "Markdown source", False)
-        members = prepare_attachment(paper_dir.parent, attachment, args.anonymous)
-        source, images = manuscript(pandoc, paper_dir, attachment.stat().st_size, args.venue, args.anonymous, members)
-        template = "tmlr.tex" if args.venue == "tmlr" else "print.tex"
-        citations = "--natbib" if args.venue == "tmlr" else "--citeproc"
+        inspect_text((paper_dir / "paper.md").read_bytes(), "Markdown source")
+        members = prepare_attachment(paper_dir.parent, attachment)
+        source, images = manuscript(pandoc, paper_dir, attachment.stat().st_size, members)
         subprocess.run(
             [pandoc, "--from=json", "--to=latex-smart", "--standalone", "--number-sections",
-             "--wrap=none", "--syntax-highlighting=none", f"--template={template}", citations, "--bibliography=references.bib",
+             "--wrap=none", "--syntax-highlighting=none", "--template=print.tex", "--citeproc", "--bibliography=references.bib",
              "--fail-if-warnings",
              "--lua-filter=print.lua", "-o", str(build / "paper.tex")],
             input=source, text=True, cwd=paper_dir, env=env, check=True,
         )
         tex = build / "paper.tex"
         tex.write_text(tex_characters(tex.read_text(encoding="utf-8")), encoding="utf-8")
-        inspect_text(tex.read_bytes(), "generated TeX", args.anonymous)
+        inspect_text(tex.read_bytes(), "generated TeX")
         for image in images:
             (build / image).parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(paper_dir.parent / image, build / image)
-        if args.venue == "tmlr":
-            (build / "references.bib").write_text(tex_characters((paper_dir / "references.bib").read_text()), encoding="utf-8")
-            shutil.copyfile(paper_dir / "tmlr-style/LICENSE", build / "TMLR-LICENSE")
-            for name, expected in TMLR_ASSETS.items():
-                style = (paper_dir / "tmlr-style" / name).read_bytes()
-                if sha256(style).hexdigest() != expected:
-                    raise ValueError(f"Journal asset differs from the official distribution: {name}")
-                (build / name).write_bytes(style)
         flags = ["--only-cached"] if args.only_cached else []
         subprocess.run(
-            [tectonic, *flags, "--keep-logs", "--keep-intermediates", "-Z", "deterministic-mode", "paper.tex"],
+            [tectonic, *flags, "--keep-logs", "-Z", "deterministic-mode", "paper.tex"],
             cwd=build, env=env, check=True,
         )
-        for log in (*build.glob("*.log"), *build.glob("*.blg")):
-            log_data = log.read_bytes()
-            inspect_text(log_data, log.name, False)
-            if b"Missing character:" in log_data:
-                raise ValueError(f"Missing printed glyph in {log.name}")
-            if re.search(rb"Citation .* undefined|There were undefined (references|citations)"
-                         rb"|Warning--I didn't find a database entry", log_data):
-                raise ValueError(f"Unresolved citation or cross-reference in {log.name}")
-        verify_export(build / "paper.pdf", attachment, args.anonymous)
+        log = (build / "paper.log").read_bytes()
+        inspect_text(log, "paper.log")
+        if b"Missing character:" in log:
+            raise ValueError("Missing printed glyph in paper.log")
+        if re.search(rb"Citation .* undefined|There were undefined (references|citations)", log):
+            raise ValueError("Unresolved citation or cross-reference in paper.log")
+        verify_export(build / "paper.pdf", attachment)
         if args.source_zip:
-            extensions = {".tex", ".bib", ".bst", ".sty", ".bbl"}
-            assets = {*images, attachment.name, "TMLR-LICENSE"}
-            if args.venue == "arxiv":
-                shutil.copyfile(paper_dir / "00README.json", build / "00README.json")
-                assets.add("00README.json")
+            shutil.copyfile(paper_dir / "00README.json", build / "00README.json")
+            inputs = {Path(name) for name in (*images, "00README.json", "paper.tex", attachment.name)}
             with ZipFile(build / "tex-sources.zip", "w") as archive:
-                for path in sorted(build.rglob("*")):
-                    name = path.relative_to(build).as_posix()
-                    if path.is_file() and (name in assets or path.suffix in extensions):
-                        archive.writestr(ZipInfo(name), path.read_bytes(), compress_type=ZIP_DEFLATED)
-            (build / "tex-sources.zip").replace(paper_dir / (edition + "-sources.zip"))
-        if args.venue == "tmlr" and args.anonymous:
-            attachment.replace(paper_dir / "paper-tmlr-anon-supplement.zip")
+                for path in sorted(inputs):
+                    archive.writestr(ZipInfo(path.as_posix()), (build / path).read_bytes(), compress_type=ZIP_DEFLATED)
+            (build / "tex-sources.zip").replace(paper_dir / "paper-sources.zip")
         (build / "paper.pdf").replace(output)
     print(output)
 
