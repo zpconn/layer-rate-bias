@@ -15,6 +15,8 @@ This revision follows the review of `paper-v2` at commit `9ecb601e86e50505850d24
 | R7 | Related work immediately follows the introduction. Section 4.2 compares unit-step GD with flow at two widths, both on the same 24 seeds and against the full primary flow sample. |
 | R8 | Anonymous-edition wording was outside the author's selected venue for this revision. |
 
+The source commit is `ac6b4f59c68069ebed08b5ccc2800a86f895635b`. Native XeLaTeX from TeX Live 2025 compiled the complete upload archive and embedded the 4,614,906-byte supplement without changing a byte (SHA-256 `b565b1707fc7928eb0b86f2c6049923d98c34a10fdb0e8ce4912c8c831e71f83`). Repeated builds reproduced the preprint, upload ZIP and GitHub reader byte for byte. Both kernel modes accepted the fresh proof export with SHA-256 `1bbfa7c246ab3672f35e0781fb9353f3ef581fc327d51070dea0c4ceb47ce8f9`. [Verification receipt](formal/verification/receipt.json)
+
 ## paper-v2 · changes since paper-v1
 
 The comparison point is commit `34cc12b89d7b5b60853c8e74f1df75f9087e82e0`. Section numbers below refer to the revised manuscript.
