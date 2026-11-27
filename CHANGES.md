@@ -28,3 +28,11 @@ The comparison point is commit `34cc12b89d7b5b60853c8e74f1df75f9087e82e0`. Secti
 The author chose the tagged GitHub release as the public archive for this revision. The author has no Zenodo account, and this release has no Zenodo DOI.
 
 The public release does not constitute a journal or arXiv submission. TMLR's editorial policy permits assistive use and makes the author responsible for the content. Its FAQ also gives an expectation about the human origin of ideas, claims and results. The contribution statement describes how this work was actually produced. Editorial eligibility remains a decision for the journal. [Editorial policy](https://jmlr.org/tmlr/editorial-policies.html) · [Author FAQ](https://jmlr.org/tmlr/faq.html)
+
+## Verification of this release
+
+The clean build covered 145 Lean libraries. The closed export contained 5,428 safe project declarations, including 4,511 theorems. The manuscript links identify 209 distinct theorem declarations for the axiom audit. Standard and paranoid kernel replay both passed for export SHA-256 `eb21895b80bfe0cff6c071f5841aef3c5ab5e2c4f6fbd40a5b9659f189661566`. [Receipt](formal/verification/receipt.json)
+
+Both 41-page PDFs and both source ZIPs matched byte for byte across two offline builds. Recompiling the extracted named TeX archive also reproduced the preprint PDF byte for byte. The named and anonymous supplements each contain 189 files. The anonymous edition has an empty PDF author field. Its separate supplement matches its embedded ZIP byte for byte.
+
+All 38 bibliography entries have a DOI or arXiv identifier, are cited in the manuscript, and have an opened-source claim audit. Re-running the original direct simulator reproduced its 472 primary and refinement records and 27 boundary records byte for byte. The expanded sweep covers 30 designs and 3,216 natural pairs. [Reference audit](paper/references-check.md) · [Experiment methods and results](layer-rates/README.md)
