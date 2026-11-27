@@ -30,7 +30,7 @@
     "proofwidgets": "df72b022e558978a1c50264cfc4d7fec86fa8e04"
   },
   "export_bytes": 726873722,
-  "export_sha256": "eb21895b80bfe0cff6c071f5841aef3c5ab5e2c4f6fbd40a5b9659f189661566",
+  "export_sha256": "1bbfa7c246ab3672f35e0781fb9353f3ef581fc327d51070dea0c4ceb47ce8f9",
   "modules": [
     "CircleCoefficientExpansion",
     "CircleReparametrization",
@@ -314,7 +314,7 @@
     "CircleVariableGD.lean": "45ec9b6b3858d9ab575d20860a9571231e109e79549739bd667473340630208b",
     "CircleWeakPrediction.lean": "3e7dc46a6dc026d12873304329953c68c7c21a137c84cb9b77d8789d83ea25cf",
     "CircleWeightedDynamics.lean": "e490c45d84ba5d1eecb7fc8f99f18f05abf35988bd0e6e6ae353e960ca931016",
-    "CircleWeightedStep.lean": "aa8e44ca88090f33750a091afc57984a54cc70d1e0d67c247e89cb94ea905a54",
+    "CircleWeightedStep.lean": "6a8fe543d3bd73b7041d8ea6d627f079a7a21c09f23ad3b8f7ff608cce13a98d",
     "CircleWidthFinite.lean": "a650552da4fa02c5f70779a765668ad363cb27518c848b42f094fff8dfd1674d",
     "CircleWidthGaussianEnergy.lean": "15e475265effc4c459298e1edfa6df9326de4ea56d3cf5ce4f1884b8d1313775",
     "CircleWidthInitTail.lean": "219042fa9a8c46c1fe5d70dab22f1c638458828eb2ba56bf1163a05ba4ff700d",
@@ -324,7 +324,7 @@
     "CircleWidthResidualTail.lean": "edc690b7ee56ae3db83886df04ef0abbc3d4bf3bf6f81b5281a6217efe54c72f",
     "CircleWidthTracking.lean": "285f45ba9217568d688330d64adaf5a4a9e9fbe3ca6fd1cb9cd616b693f91829",
     "CircleWidthUpper.lean": "2d0feec573961996ba82ab170ad9691945fc1df1ffde85dd78b995c97d70e6bf",
-    "PaperAudit.lean": "e66a358adda2c490f6105aaa341a22390799b11c5105012e90230d8c12f85767",
+    "PaperAudit.lean": "1ca61e7e6bf007e2fc86d553e36c8c06a9a75bd8ca727ef4034e451b4b64ded1",
     "lake-manifest.json": "ec0620ab4cc6ecadff8dfdb5f36f0b8c7a0aa324b639c33fae524eb47c428920",
     "lakefile.toml": "7234b6aba00b6383483e6918c9858e1d5acdb0679572bd7e4cf93ed5c673d5e4",
     "lean-toolchain": "ca5f1f601d34c49079e38d7e7041eb0f2a9c227fbc1df0f404820069a052330c"

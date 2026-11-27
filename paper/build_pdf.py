@@ -220,7 +220,7 @@ def main():
     env = dict(os.environ)
     env.setdefault("SOURCE_DATE_EPOCH", "0")
     if args.github:
-        subprocess.run([pandoc, "paper.md", "--citeproc", "--bibliography=references.bib",
+        subprocess.run([pandoc, "paper.md", "--lua-filter=print.lua", "--citeproc", "--bibliography=references.bib",
                         "-M", "reference-section-title=References", "--to=gfm+tex_math_dollars", "--fail-if-warnings",
                         "--wrap=none", "-o", "paper-reader.md"], cwd=paper_dir, check=True)
         return
@@ -272,6 +272,9 @@ def main():
         if args.source_zip:
             extensions = {".tex", ".bib", ".bst", ".sty", ".bbl"}
             assets = {*images, attachment.name, "TMLR-LICENSE"}
+            if args.venue == "arxiv":
+                shutil.copyfile(paper_dir / "00README.json", build / "00README.json")
+                assets.add("00README.json")
             with ZipFile(build / "tex-sources.zip", "w") as archive:
                 for path in sorted(build.rglob("*")):
                     name = path.relative_to(build).as_posix()

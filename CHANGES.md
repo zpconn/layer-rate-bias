@@ -1,8 +1,25 @@
-# Changes since paper-v1
+# Release history
+
+## paper-v3 · arXiv preprint
+
+This revision follows the review of `paper-v2` at commit `9ecb601e86e50505850d24244a63482039fd0a12`. The author selected the named arXiv edition for this revision. The anonymous TMLR files belong to the earlier release.
+
+| Review item | Change |
+| --- | --- |
+| R1 | Section 4.1 and Table 6 give all 25 adjacent-width exponents with pointwise intervals from 4,096 bootstrap draws that preserve seed pairing across widths. Table 5 identifies its single-power-law assumption. The abstract reports the measured width range and the curvature visible in local estimates. The optional two-term fit was omitted because these data leave the asymptotic exponent open. |
+| R2 | Appendix C now identifies the nine Lean declarations for Theorem 1, including the rate factor, width, deadline and its inputs, residual norm, coefficient and guarantee. The update-segment derivative cited in Section 5 is public and directly importable. |
+| R3 | The reader-facing text identifies the primary sample, integrator and theorem directly. The named edition cites the current release tag; historical comparisons are recorded here. |
+| R4 | The named upload archive includes an arXiv compiler manifest selecting XeLaTeX and TeX Live 2025, all figures and the embedded proof supplement. The archive check performs a clean native XeLaTeX build and compares the PDF attachment with the uploaded ZIP. |
+| R5 | Fixed score margins use Γ. The notation for rate scales, density bounds, layer magnitudes, kernel errors and tails is now distinguished in the statements and their proofs. |
+| R6 | Rendered source notes identify proofs, Lean declarations, data and verification records consistently in the preprint and GitHub reader. |
+| R7 | Related work immediately follows the introduction. Section 4.2 compares unit-step GD with flow at two widths, both on the same 24 seeds and against the full primary flow sample. |
+| R8 | Anonymous-edition wording was outside the author's selected venue for this revision. |
+
+## paper-v2 · changes since paper-v1
 
 The comparison point is commit `34cc12b89d7b5b60853c8e74f1df75f9087e82e0`. Section numbers below refer to the revised manuscript.
 
-## Manuscript and submission files
+### Manuscript and submission files
 
 | Review item | Change |
 | --- | --- |
@@ -23,13 +40,13 @@ The comparison point is commit `34cc12b89d7b5b60853c8e74f1df75f9087e82e0`. Secti
 | P1.10–11 | Proposition 2.2 treats general continuous targets. Proposition 2.4 gives the Fourier coefficients for all integer frequencies and specializes the zero mode to quadrature. The paper identifies the teacher-specific moments, the target quadrature error and the limits of nonlinear tracking. |
 | P2 | The abstract gives the prediction and experimental regime. The manuscript includes the effect sizes at three and 31 nodes, the scope of the training model, explicit toolchain versions and a source-checked bibliography. The width sweep figure and paired scatter use the same colors and symbols as the text. |
 
-## Distribution
+### Distribution
 
 The author chose the tagged GitHub release as the public archive for this revision. The author has no Zenodo account, and this release has no Zenodo DOI.
 
 The public release does not constitute a journal or arXiv submission. TMLR's editorial policy permits assistive use and makes the author responsible for the content. Its FAQ also gives an expectation about the human origin of ideas, claims and results. The contribution statement describes how this work was actually produced. Editorial eligibility remains a decision for the journal. [Editorial policy](https://jmlr.org/tmlr/editorial-policies.html) · [Author FAQ](https://jmlr.org/tmlr/faq.html)
 
-## Verification of this release
+### Verification of this release
 
 The clean build covered 145 Lean libraries. The closed export contained 5,428 safe project declarations, including 4,511 theorems. The manuscript links identify 209 distinct theorem declarations for the axiom audit. Standard and paranoid kernel replay both passed for export SHA-256 `eb21895b80bfe0cff6c071f5841aef3c5ab5e2c4f6fbd40a5b9659f189661566`. [Receipt](formal/verification/receipt.json)
 

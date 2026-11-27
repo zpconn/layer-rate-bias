@@ -24,7 +24,9 @@ The GD proof splits into a typical-seed trajectory estimate and a lower bound fr
 
 ## Scope of the formal artifact
 
-The revised tree contains the local import closure of the manuscript's source links. `PaperAudit.lean` imports these modules and prints the axioms of the theorems at the cited lines, including private lemmas. The verifier checks this list against the Markdown when the manuscript is present and checks the import closure on every replay. To update the audit after changing a citation, run `python3 verify.py --write-paper-audit` in this directory. [Paper audit](PaperAudit.lean)
+Appendix C maps the finite-grid GD theorem to the Lean definitions of its width, common deadline, training error and predicted slope. [Theorem 1 statement audit](../paper/paper.md#finite-grid-gradient-descent-theorem-1)
+
+The formal tree contains the local import closure of the manuscript's source links. `PaperAudit.lean` imports these modules and prints the axioms of the theorems at the cited lines, including private lemmas. The verifier checks this list against the Markdown when the manuscript is present and checks the import closure on every replay. To update the audit after changing a citation, run `python3 verify.py --write-paper-audit` in this directory. [Paper audit](PaperAudit.lean)
 
 The original release had 213 library modules. Of these, 121 lay in the original paper's closure. Adding the positive-rate schedule, Gaussian limits, broad flow window, closed forms, first-fit support, independent-copy comparison and first cosine observable brought in 20 more libraries including their dependencies. The remaining 72 and the four earlier audit scripts are preserved in the original release, commit `34cc12b89d7b5b60853c8e74f1df75f9087e82e0`.
 

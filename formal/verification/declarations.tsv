@@ -5231,6 +5231,7 @@ CircleWeightedStep	theorem	CircleWeightedStep.iterate.eq_1	propext,Classical.cho
 CircleWeightedStep	theorem	CircleWeightedStep.iterate.eq_2	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	CircleWeightedStep.iterate.eq_def	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	CircleWeightedStep.iterate_one	propext,Classical.choice,Quot.sound	safe
+CircleWeightedStep	theorem	CircleWeightedStep.observableAt	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	CircleWeightedStep.segment.eq_1	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	CircleWeightedStep.signed_increment	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleActualTracking.gridR.eq_1	propext,Classical.choice,Quot.sound	safe
@@ -5241,7 +5242,6 @@ CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleWeightedStep.iter
 CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleWeightedStep.mean_contraction	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleWeightedStep.mixed_contraction	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleWeightedStep.mixed_contraction._simp_1_4	propext,Quot.sound	safe
-CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleWeightedStep.observableAt	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleWeightedStep.predictionIncrement	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleWeightedStep.segmentAC	propext,Classical.choice,Quot.sound	safe
 CircleWeightedStep	theorem	_private.CircleWeightedStep.0.CircleWeightedStep.segment_deriv	propext,Classical.choice,Quot.sound	safe

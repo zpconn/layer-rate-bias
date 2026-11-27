@@ -90,7 +90,7 @@ def mixedRow (τ : ℝ) (N : ℕ) (z : State m) (x : ℝ × ℝ) (s : ℝ) (i : 
   entry τ (segment τ N z s) z x (circleInput N i)
     (fun j => actualGate (pre (segment τ N z s) j x)) (startGates z i)
 
-private theorem observableAt (τ : ℝ) (η : ℝ) (N : ℕ) (z : State m) (x : ℝ × ℝ) :
+theorem observableAt (τ : ℝ) (η : ℝ) (N : ℕ) (z : State m) (x : ℝ × ℝ) :
     ∀ᵐ s : ℝ, s ∈ uIcc 0 η → HasDerivAt (fun t => output (1/sqrt m) (segment τ N z t) x)
       (-(rowOp (mixedRow τ N z x s) (gridR N z))) s := by
   have hk : ∀ᵐ s, ∀ j : Fin m, s ∈ uIcc 0 η →

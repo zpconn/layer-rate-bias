@@ -1,0 +1,9 @@
+{
+  "spec_version": 1,
+  "texlive_version": 2025,
+  "process": {"compiler": "xelatex"},
+  "sources": [
+    {"filename": "paper.tex", "usage": "toplevel"},
+    {"filename": "proof-sources.zip", "usage": "include"}
+  ]
+}

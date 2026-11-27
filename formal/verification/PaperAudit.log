@@ -235,7 +235,5 @@
 'CircleWeightedDynamics.unit_trajectory' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleWeightedStep.direction_le' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleWeightedStep.grid_defect' depends on axioms: [propext, Classical.choice, Quot.sound]
-'_private.CircleWeightedStep.0.CircleWeightedStep.observableAt' depends on axioms: [propext,
- Classical.choice,
- Quot.sound]
+'CircleWeightedStep.observableAt' depends on axioms: [propext, Classical.choice, Quot.sound]
 'CircleWeightedStep.signed_increment' depends on axioms: [propext, Classical.choice, Quot.sound]

@@ -3,6 +3,7 @@
 import argparse
 import csv
 from collections import defaultdict
+from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
@@ -40,7 +41,7 @@ def width_estimates(records, repeats):
     expected = {(n, m) for n in COUNTS for m in WIDTHS}
     if groups.keys() != expected or refined.keys() != expected:
         raise ValueError("Missing or unexpected design")
-    designs, trends = [], []
+    designs, trends, adjacent = [], [], []
     log_width = np.log(np.asarray(WIDTHS, dtype=float))
     log_centered = log_width - log_width.mean()
     for n, count in COUNTS.items():
@@ -113,7 +114,24 @@ def width_estimates(records, repeats):
                 "kappa_high": khi,
             }
         )
-    return designs, trends
+        # The second axis of bootstrap indexes widths for the same resampled seeds.
+        spacing = np.diff(log_width)
+        local_alpha = -np.diff(np.log(shortfalls)) / spacing
+        local_boot = -np.diff(np.log(bootstrap), axis=1) / spacing
+        lower, upper = np.quantile(local_boot, [0.025, 0.975], axis=0)
+        for i, (start, end) in enumerate(pairwise(WIDTHS)):
+            adjacent.append(
+                {
+                    "n": n,
+                    "seeds": count,
+                    "width_low": start,
+                    "width_high": end,
+                    "alpha": local_alpha[i],
+                    "alpha_low": lower[i],
+                    "alpha_high": upper[i],
+                }
+            )
+    return designs, trends, adjacent
 
 
 def control_estimates(records):
@@ -226,13 +244,14 @@ def main():
     parser.add_argument("--input-dir", type=Path, default=DIR)
     parser.add_argument("--output-dir", type=Path, default=DIR)
     args = parser.parse_args()
-    d, t = width_estimates(
+    d, t, adjacent = width_estimates(
         read(args.input_dir / "width-runs.csv"),
         read(args.input_dir / "width-refinement.csv"),
     )
     args.output_dir.mkdir(parents=True, exist_ok=True)
     save(args.output_dir / "width-summary.csv", d)
     save(args.output_dir / "width-trends.csv", t)
+    save(args.output_dir / "width-local-exponents.csv", adjacent)
     save(
         args.output_dir / "control-summary.csv",
         control_estimates(read(args.input_dir / "control-runs.csv")),

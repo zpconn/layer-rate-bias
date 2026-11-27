@@ -110,23 +110,46 @@ local function theorem(quote)
   return blocks
 end
 
-local function source_link(inline)
-  return inline.t == "Link" and ("/" .. inline.target):find("/formal/", 1, true)
+local function source_kind(inline)
+  if inline.t ~= "Link" then return end
+  local target = inline.target
+  if target:match("^#ref%-") then return end
+  if target:match("^#") then return "Proofs" end
+  local path = target:match("^https://github%.com/[^/]+/[^/]+/blob/[^/]+/(.+)$")
+    or target:gsub("^%.%./", "")
+  path = path:match("^[^#]*")
+  if path:match("^formal/.+%.lean$") then return "Lean" end
+  if path:match("^layer%-rates/") then return "Data" end
+  if path:match("^formal/verification/") then return "Verification" end
+  if path:match("^docs/") or path:match("^formal/") then return "Sources" end
 end
 
--- Set the trailing groups of clickable Lean references at citation size, keeping
--- their labels and each destination. A display's source line begins flush left.
+-- A source note follows a completed sentence, a paragraph label, or a display.
+-- Links used as words in a sentence and links inside the audit table stay inline.
 local function citations(paragraph)
   local inlines = paragraph.content
   local i = #inlines
-  if i == 0 or not source_link(inlines[i]) then return end
+  if i == 0 then return end
+  local kind = source_kind(inlines[i])
+  if not kind then return end
   while i >= 5 and inlines[i-1].t == "Space" and inlines[i-2].t == "Str" and
-        inlines[i-2].text == "·" and inlines[i-3].t == "Space" and source_link(inlines[i-4]) do
+        inlines[i-2].text == "·" and inlines[i-3].t == "Space" and source_kind(inlines[i-4]) do
     i = i - 4
+    if source_kind(inlines[i]) ~= kind then kind = "Sources" end
   end
-  local opening = i == 1 and "\\noindent\\proofsources{" or "\\proofsources{"
-  inlines:insert(i, pandoc.RawInline("latex", opening .. "[Lean: "))
-  inlines:insert(pandoc.RawInline("latex", "]}"))
+  if i > 1 and (i < 3 or inlines[i-1].t ~= "Space" or
+        not pandoc.utils.stringify(inlines[i-2]):match("[.!?]$")) then
+    return
+  end
+  if FORMAT:match("^latex") then
+    local opening = i == 1 and "\\noindent\\proofsources{" or "\\proofsources{"
+    inlines:insert(i, pandoc.RawInline("latex", opening .. "[" .. kind .. ": "))
+    inlines:insert(pandoc.RawInline("latex", "]}"))
+  else
+    inlines:insert(i, pandoc.Space())
+    inlines:insert(i, pandoc.Str("[" .. kind .. ":"))
+    inlines:insert(pandoc.Str("]"))
+  end
   return paragraph
 end
 
@@ -236,8 +259,11 @@ local function table_float(tbl)
   return raw(table.concat(lines, "\n"))
 end
 
+if not FORMAT:match("^latex") then return {{Para = citations}} end
+
 return {
+  {Para = citations},
   {Blocks = mark_structure},
-  {BlockQuote = theorem, Para = citations, Figure = figure, Code = code_span,
+  {BlockQuote = theorem, Figure = figure, Code = code_span,
    CodeBlock = code_block, Table = table_float},
 }

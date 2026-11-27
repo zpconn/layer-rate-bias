@@ -18,6 +18,7 @@ import all CircleEulerLimits
 import all CircleFiniteCoefficient
 import all CircleFiniteConfidence
 import all CircleFiniteHorizons
+import all CircleFiniteWidth
 import all CircleFirstCosine
 import all CircleFirstCosineReference
 import all CircleFitSupport
